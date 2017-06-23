@@ -1,9 +1,9 @@
 function [fitobject, x0] = pfit (x, z, n)
 %PFIT Fits multi-dimensional, polynomial function to data.
 %
-% Finds polynomial function in x1,...,xm of degrees n1,...,nm
+% Finds polynomial function in x1,...,xm of degrees n
 %
-%   f(x) = bn0 x1^n1 + ... + b0n xm^nm + ... + b10 x1 + ... + b01 xm + b0;
+%   f(x) = bn0 x1^n + ... + b0n xm^n + ... + b10 x1 + ... + b01 xm + b0;
 %
 % minimizing
 %
@@ -24,10 +24,13 @@ function [fitobject, x0] = pfit (x, z, n)
 %
 %%
 
+% number of columns in data
+m = size(x, 2);
+
 % column of monomials to degrees n1,...,nm
 % p(x) = [1,...,x^n]^T
 % where the length of p is r.
-[p, X, r] = monomials(n, length(x(1,:)));
+[p, X, r] = monomials(n, m);
 
 % length of data
 % k = #x = #y = #z
@@ -38,7 +41,7 @@ k = length(z);
 %
 % As f is polynomial of degree n, i.e.
 %
-%   f = qn0 x1^n + ... + q0n xm^n + ... + q10 x1 + ... + q01 xm + q0,
+%   f = q0 + q10 x1 + ... + q01 xm + ... + qn0 x1^n + ... + q0n xm^n + ,
 %
 % with q = [q0 q10 ... q01 ... qn0 ... q0n]^T, the objective can be written
 % as least-square problem in q:
@@ -78,31 +81,7 @@ P = formula(p);
 F = q'*P;
 f = symfun(F, X);
 
-fitobject = pwfitobject(sprintf('poly%g%g', n, n), f, [], q, n);
+fitobject = pwfitobject(['poly' sprintf('%g', n+zeros(1,m))], f, [], q, n);
 
 
-end
-
-function [p, X, r] = monomials(n, m)
-%MONOMIALS Creates a column vector of monomials in m variables to degree n.
-%   Vector p is symbolic function of X = [x1,...,xm] and has length r.
-
-    % length of p for 0 < m < 3
-    r = ((n+1)^m + n+1)/2;
-    X = sym('X', [m 1]);
-    P = sym('P', [r 1]);
-    l = 1;
-    for i = 0:n
-        switch m
-            case 1, P(l) = X^i; l = l+1;
-            case 2
-                for j = 0:i
-                    P(l) = X(1)^(i-j)*X(2)^j;
-                    l = l+1;
-                end
-            otherwise
-                error('Monomials of more than 2 variables are not supported yet.');
-        end
-    end
-    p = symfun(P, X);
 end
