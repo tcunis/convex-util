@@ -67,7 +67,7 @@ classdef (Abstract) Quantity
             %   Quantities needs to be initialized with a magnitude |magn|
             %   in unit |unit|.
             %   If no arguments are given, quantity should be zero and SI.
-            if (nargin == 0)                          % default constructor
+            if (nargin < 2)                           % default constructor
                 obj.magn    = 0;
                 obj.unit    = obj.unitSI;
                 
@@ -308,7 +308,7 @@ classdef (Abstract) Quantity
             % UPLUS  Overloaded unary operator '+'.
             %   Returns quantity (or array of quantities) of same magnitude
             %   and initial unit as given.
-            qpos = obj.createAll(uplus(obj.get({obj.unit})), {obj.unit});
+            qpos = obj.createAll(uplus(obj.get(obj.getUnits)), obj.getUnits);
         end
         
         function qneg = uminus(obj)
@@ -316,7 +316,7 @@ classdef (Abstract) Quantity
             %   Quantities are negated element-wise by negating the  
             %   magnitudes. Returns quantity (or array of quantities) of 
             %   same magnitude and initial unit as given.
-            qneg = obj.createAll(uminus(obj.get({obj.unit})), {obj.unit});
+            qneg = obj.createAll(uminus(obj.get(obj.getUnits)), obj.getUnits);
         end
         
         function qdif = minus(q1, q2)
@@ -357,7 +357,7 @@ classdef (Abstract) Quantity
                     assert(all(size(q1) == size(q2)),    ...
                                         Quantity.MESSAGES.ERR_SIZE_ARG, ...
                                         'first operand', 'second operand');
-                    qsum = q1.createAll(plus(q1.get({q1.unit}),q2.get({q1.unit})), {q1.unit});
+                    qsum = q1.createAll(plus(q1.get(q1.getUnits),q2.get(q1.getUnits)), q1.getUnits);
                 end
             else
                 warning(Quantity.MESSAGES.WRN_NQTY_GOT, q1.unitSI);
