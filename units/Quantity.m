@@ -69,6 +69,8 @@ classdef (Abstract) Quantity
             %   If no arguments are given, quantity should be zero and SI.
             if (nargin < 2)                           % default constructor
                 obj.magn    = 0;
+                obj.magnSI  = 0;
+                
                 obj.unit    = obj.unitSI;
                 
             elseif length(magn) == 1                      % single quantity
