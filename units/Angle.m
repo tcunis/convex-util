@@ -27,6 +27,21 @@ classdef Angle < Quantity
             obj@Quantity(varargin{:});
         end
         
+        %% Quick getter radians / degrees
+        function magr = rad(angl)
+            % RAD   Returns magnitude in radians.
+            %   Equivalent to angl.get('rad').
+            %   See also GET.
+            magr = angl.get('rad');
+        end
+        
+        function magd = deg(angl)
+            % DEG   Returns magnitude in degrees.
+            %   Equivalent to angl.get('deg').
+            %   See also GET.
+            magd = angl.get('deg');
+        end
+        
         %% Trigonometric functions (radians)
         function sina = sin(angl)
             %SIN    Sine of this angle in radians.
