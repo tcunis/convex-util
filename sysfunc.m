@@ -57,6 +57,46 @@ switch n
                           sys{2}(varargin{:});
                           sys{3}(varargin{:}); 
                           sys{4}(varargin{:})  ]./out;
+    case 5
+        f = @(varargin) [ sys{1}(varargin{:});
+                          sys{2}(varargin{:});
+                          sys{3}(varargin{:}); 
+                          sys{4}(varargin{:}); 
+                          sys{5}(varargin{:})  ]./out;
+    case 6
+        f = @(varargin) [ sys{1}(varargin{:});
+                          sys{2}(varargin{:});
+                          sys{3}(varargin{:}); 
+                          sys{4}(varargin{:}); 
+                          sys{5}(varargin{:}); 
+                          sys{6}(varargin{:})  ]./out;
+    case 7
+        f = @(varargin) [ sys{1}(varargin{:});
+                          sys{2}(varargin{:});
+                          sys{3}(varargin{:}); 
+                          sys{4}(varargin{:}); 
+                          sys{5}(varargin{:}); 
+                          sys{6}(varargin{:}); 
+                          sys{7}(varargin{:})  ]./out;
+    case 8
+        f = @(varargin) [ sys{1}(varargin{:});
+                          sys{2}(varargin{:});
+                          sys{3}(varargin{:}); 
+                          sys{4}(varargin{:}); 
+                          sys{5}(varargin{:}); 
+                          sys{6}(varargin{:}); 
+                          sys{7}(varargin{:}); 
+                          sys{8}(varargin{:})  ]./out;
+    case 9
+        f = @(varargin) [ sys{1}(varargin{:});
+                          sys{2}(varargin{:});
+                          sys{3}(varargin{:}); 
+                          sys{4}(varargin{:}); 
+                          sys{5}(varargin{:}); 
+                          sys{6}(varargin{:}); 
+                          sys{7}(varargin{:}); 
+                          sys{8}(varargin{:}); 
+                          sys{9}(varargin{:})  ]./out;
     case 10
         f = @(varargin) [ sys{1}(varargin{:});
                           sys{2}(varargin{:});
