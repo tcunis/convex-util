@@ -1,11 +1,12 @@
-function data = coco_bd_data(bd, var, type_idxs)
+function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %COCO_BD_DATA Retrieves variable data of continuation.
 %
 %% Usage and description
 %   
 %   [h] = coco_bd_data(bd, var | {var, [var_idx], [var_conv]}, 
-%                      {} | bd_type | bd_idxs | {bd_type, tp_idxs | 'end'}
-%                         | 'min' | 'max' | {'min' | 'max', arg}
+%                      [{} | bd_type | bd_idxs | {bd_type, tp_idxs | 'end'}
+%                          | 'min' | 'max' | {'min' | 'max', arg}],
+%                      [default]
 %                     )
 %
 % where arg ::= arg_type | arg_idxs | {arg_type, arg_idxs}.
@@ -23,32 +24,52 @@ function data = coco_bd_data(bd, var, type_idxs)
 %% Select arguments
 if ~iscell(var),        var = {var};                    end
 
-if nargin < 3
-    type_idxs = {};
-elseif ~iscell(type_idxs)
-    type_idxs = {type_idxs};
-end
+% if nargin < 3
+%     type_idxs = {};
+% elseif ~iscell(type_idxs)
+%     type_idxs = {type_idxs};
+% end
 
 for i=1:length(var)
     arg = var{i};
-    if ~exist('bd_var','var'),                    bd_var = arg;   continue; end
-    if ~exist('var_idx','var') && isreal(arg),     var_idx = arg;   continue; end
-    if ~exist('var_conv','var') && isa(arg,'function_handle'),   var_conv = arg;   continue; end
+    if ~exist('bd_var','var'),                          bd_var = arg;
+    elseif ~exist('var_idx','var') && isreal(arg),      var_idx = arg;
+    elseif ~exist('var_conv','var') && isfunc(arg),     var_conv = arg;
+    end
 end
-if ~exist('var_idx','var'),                      var_idx = [];              end
-if ~exist('var_conv','var'),                    var_conv = @double;              end
 
+for i=1:length(varargin)
+    arg = varargin{i};
+    if ~exist('type_idxs','var') && iscell(arg),        type_idxs = arg;         
+    elseif ~exist('type_idxs','var') && ~isfunc(arg),	type_idxs = {arg};  
+    elseif ~exist('default', 'var') && isfunc(arg),     default = arg;        
+    end
+end
+
+if ~exist('type_idxs','var'),   type_idxs = {};                         end
 for i=1:length(type_idxs)
     arg = type_idxs{i};
-    if ~exist('bd_type','var') && ischar(arg),         bd_type = arg;   continue; end
-    if ~exist('bd_arg', 'var') && (ischar(arg) || iscell(arg))
-                                                       bd_arg  = arg;   continue; end
-    if ~exist('bd_idxs','var') && isreal(arg),         bd_idxs = arg;   continue; end
+    if ~exist('bd_type','var') && ischar(arg),          bd_type = arg;
+    elseif ~exist('bd_arg', 'var') && (ischar(arg) || iscell(arg))
+                                                        bd_arg  = arg;
+    elseif ~exist('bd_idxs','var') && isreal(arg),      bd_idxs = arg;
+    end
 end
-if ~exist('bd_type','var'),                          bd_type = [];              end
-if ~exist('bd_arg', 'var'),                          bd_arg  = [];              end
-if ~exist('bd_idxs','var'),                          bd_idxs = [];              end
 
+if ~exist('var_idx','var'),     var_idx = [];                           end
+if ~exist('var_conv','var'),	var_conv = @double;                     end
+if ~exist('bd_type','var'),     bd_type = [];                           end
+if ~exist('bd_arg', 'var'),     bd_arg  = [];                           end
+if ~exist('bd_idxs','var'),     bd_idxs = [];                           end
+if ~exist('default','var'),     default = @zeros;                       end
+
+%% Empty variable request
+if isempty(var)
+    pseudo = coco_bd_data(bd, 'PT', type_idxs);
+    
+    data = default(size(pseudo));
+else
+    
 %% Get variable data
 data = coco_bd_col(bd, bd_var);
 
@@ -82,4 +103,12 @@ end
 %% Convert and return data
 data = var_conv(data(var_idx,idxs));
 
+end
+
+end
+
+function tf = isfunc(A)
+%ISFUNC     Determines whether input is function handle.
+
+    tf = isa(A, 'function_handle');
 end
