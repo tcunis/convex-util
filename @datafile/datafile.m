@@ -14,6 +14,8 @@ classdef datafile < handle
 % write data:
 %
 %   df.writeData(...);
+%   df.writeMatrix(...);
+%   df.writeFunction(...);
 %
 % close file:
 %
@@ -42,14 +44,15 @@ classdef datafile < handle
     methods
         nbytes = writeHeader(obj, varargin);
         nbytes = writeData(obj, varargin);
-        nbytes = writeMatrix(obj, parameter, varargin);
+        nbytes = writeMatrix(obj, varargin);
+        nbytes = writeFunction(obj, varargin);
         
         function obj = datafile(data_file, encoding)
            if ~exist('encoding', 'var'), encoding = 'UTF8'; end
            
            obj.fileID = fopen([data_file '.dat'], 'w', 'n', encoding);
            
-           obj.colwidth = 12;
+           obj.colwidth = 13;
            obj.coltypes = 'e';
            obj.nbytes = 0;
         end
@@ -77,56 +80,50 @@ classdef datafile < handle
     end
     
     methods (Static)
-        function [fileID, df] = writeDataToFile(file, header, varargin)
-            if ~iscell(header), header = {header}; end
-
-            for i=1:length(varargin)
-                arg = varargin{i};
-                if ~iscell(arg), data = varargin; break;
-                elseif ~exist('matrix','var'),   data = arg;
-                elseif ~exist('settings','var'), settings = arg;
-                end
-            end
-            if ~exist('settings', 'var'), settings = {}; end
+        function varargout = writeDataToFile(file, header, varargin)
+            varargout = cell(1, nargout);
             
-            df = datafile(file);
-            df.set(settings{:});
-            df.writeHeader(header{:});
-            df.writeData(data{:});
-            
-            if nargout <= 1
-                df.close;
-            end
-            
-            fileID = double(df);
+            [varargout{:}] = datafile.writeToFile(file, @writeData, header, varargin{:});
         end
         
-        function [fileID, df] = writeMatrixToFile(file, header, varargin)
-            if ~iscell(header), header = {header}; end
+        function varargout = writeMatrixToFile(file, header, varargin)
+            varargout = cell(1, nargout);
             
-            for i=1:length(varargin)
-                arg = varargin{i};
-                if ~iscell(arg), matrix = varargin; break;
-                elseif ~exist('matrix','var'),   matrix = arg;
-                elseif ~exist('settings','var'), settings = arg;
-                end
-            end
-            if ~exist('settings', 'var'), settings = {}; end
+            [varargout{:}] = datafile.writeToFile(file, @writeMatrix, header, varargin{:});
+        end
+        
+        function varargout = writeFunctionToFile(file, header, varargin)
+            varargout = cell(1, nargout);
             
-            df = datafile(file);
-            df.set(settings{:});
-            df.writeHeader(header{:});
-            df.writeMatrix(matrix{:});
-            
-            if nargout <= 1
-                df.close;
-            end
-            
-            fileID = double(df);
+            [varargout{:}] = datafile.writeToFile(file, @writeFunction, header, varargin{:});
         end
     end
     
-
+    methods (Static, Access = protected)
+        function [fileID, df] = writeToFile(file, handle, header, varargin)
+            if ~iscell(header), header = {header}; end
+            
+            for i=1:length(varargin)
+                arg = varargin{i};
+                if ~iscell(arg), input = varargin; break;
+                elseif ~exist('input','var'),    input = arg;
+                elseif ~exist('settings','var'), settings = arg;
+                end
+            end
+            if ~exist('settings', 'var'), settings = {}; end
+            
+            df = datafile(file);
+            df.set(settings{:});
+            df.writeHeader(header{:});
+            handle(df, input{:});
+            
+            if nargout <= 1
+                df.close;
+            end
+            
+            fileID = double(df);
+        end
     
+    end
 end
 

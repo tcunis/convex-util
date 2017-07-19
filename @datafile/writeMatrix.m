@@ -27,7 +27,7 @@ M = 1; N = 1;
 for i=1:length(varargin)
     arg = varargin{i};
     if isvector(arg),   pars{N} = arg; N = N + 1;
-    else                mats{M} = arg; M = M + 1;
+    else,               mats{M} = arg; M = M + 1;
     end
 end
 
