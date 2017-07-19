@@ -7,15 +7,15 @@ classdef datafile < handle
 %
 %   df = datafile(data_file, encoding, colwidth);
 %
-% Write column header:
+% write column header:
 %
 %   df.writeHeader(...);
 %
-% Write data:
+% write data:
 %
 %   df.writeData(...);
 %
-% Close file:
+% close file:
 %
 %   fileId = df.close;
 %
@@ -39,7 +39,6 @@ classdef datafile < handle
         nbytes;
     end
     
-    
     methods
         nbytes = writeHeader(obj, varargin);
         nbytes = writeData(obj, varargin);
@@ -55,25 +54,79 @@ classdef datafile < handle
            obj.nbytes = 0;
         end
         
-        function set(obj, field, value)
-            if strcmp(field, 'nbytes')
-                error('Cannot set field "nbytes"');
-            elseif strcmp(field, 'colwidth') && obj.nbytes > 0
-                error('Column width cannot be changed after writing.');
+        function set(obj, varargin)
+            for i=1:length(varargin)
+                arg = varargin{i};
+                if ischar(arg) || iscell(arg), obj.coltypes = arg;
+                elseif isnumeric(arg) && obj.nbytes > 0
+                    error('Column width cannot be changed after writing.');
+                elseif isnumeric(arg), obj.colwidth = arg;
+                end
             end
-            
-            %else:
-            obj.(field) = value;
         end
         
         function fileID = close(obj)
             fclose(obj.fileID);
             
-            fileID = obj.fileID;
+            fileID = double(obj);
         end
         
-        
+        function fileID = double(obj)
+            fileID = obj.fileID;
+        end
     end
+    
+    methods (Static)
+        function [fileID, df] = writeDataToFile(file, header, varargin)
+            if ~iscell(header), header = {header}; end
+
+            for i=1:length(varargin)
+                arg = varargin{i};
+                if ~iscell(arg), data = varargin; break;
+                elseif ~exist('matrix','var'),   data = arg;
+                elseif ~exist('settings','var'), settings = arg;
+                end
+            end
+            if ~exist('settings', 'var'), settings = {}; end
+            
+            df = datafile(file);
+            df.set(settings{:});
+            df.writeHeader(header{:});
+            df.writeData(data{:});
+            
+            if nargout <= 1
+                df.close;
+            end
+            
+            fileID = double(df);
+        end
+        
+        function [fileID, df] = writeMatrixToFile(file, header, varargin)
+            if ~iscell(header), header = {header}; end
+            
+            for i=1:length(varargin)
+                arg = varargin{i};
+                if ~iscell(arg), matrix = varargin; break;
+                elseif ~exist('matrix','var'),   matrix = arg;
+                elseif ~exist('settings','var'), settings = arg;
+                end
+            end
+            if ~exist('settings', 'var'), settings = {}; end
+            
+            df = datafile(file);
+            df.set(settings{:});
+            df.writeHeader(header{:});
+            df.writeMatrix(matrix{:});
+            
+            if nargout <= 1
+                df.close;
+            end
+            
+            fileID = double(df);
+        end
+    end
+    
+
     
 end
 

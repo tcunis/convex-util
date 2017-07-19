@@ -1,5 +1,23 @@
 function nbytes = writeHeader(obj, varargin)
 % WRITEHEADER    Write column titles to file.
+%
+%% Usage & Description
+%
+%   datafile.writeHeader(col1,...,colN)
+%   nbytes = datafile.writeHeader(...)
+%
+% Writes column headers |col1|, ..., |colN| to data file and returns number
+% of written bytes.
+%
+%% About
+%
+% * Author:     Torbjoern Cunis
+% * Email:      <mailto:torbjoern.cunis@onera.fr>
+% * Created:    2017-07-18
+% * Changed:    2017-07-19
+%
+%%
+
 
 fmt = sprintf('%%-%gs\t', obj.colwidth);
 
