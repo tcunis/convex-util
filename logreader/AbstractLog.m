@@ -8,9 +8,13 @@ classdef AbstractLog
     end
     
     methods
-        function log = AbstractLog()
-            log.folder = '';
-            log.file = '';
+        function log = AbstractLog(path)
+            if nargin < 1
+                path = '';
+            end
+            
+            log.folder = '.';
+            log.file = path;
         end
         
         function fid = open(log)
@@ -20,7 +24,7 @@ classdef AbstractLog
         
         function path = get_abs_file (log)
             %get_abs_file   Returns the absolute path to log file.
-            path = sprintf( '%s\\%s', log.folder, log.file );
+            path = sprintf( '%s/%s', log.folder, log.file );
         end
         
         function name = get_name (log)

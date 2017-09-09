@@ -6,8 +6,8 @@ classdef OptkLog < AbstractLog
     end
     
     methods
-        function log = OptkLog()
-            log@AbstractLog();
+        function log = OptkLog(varargin)
+            log@AbstractLog(varargin{:});
         end
         
         function csv_data = csvread(log, row1, col1)
