@@ -83,7 +83,11 @@ function xmsg = OptkXLogReader_0_9( log, xmsg )
     end
 
     % mean marker error
-    mean_error=data(:,10);
+    if size(data, 2) > 9
+        mean_error = data(:,10);
+    else
+        mean_error = NaN(size(data,1), 1);
+    end
     
     if ( xmsg == 0 )
         xmsg = OptkXLogMsg(log.get_name());
