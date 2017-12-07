@@ -1,0 +1,3 @@
+[submodule "pwpfit"]
+	path = pwpfit
+	url = git@git.recherche.enac.fr:uav_lab/pwpfit.git
