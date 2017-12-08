@@ -20,24 +20,36 @@ function nbytes = writeFunction(obj, varargin)
 %
 %%
 
+% reserve cells for parameters, functions, 
+% and constants respectively
 pars = cell(1,nargin);
 func = cell(1,nargin);
+cons = cell(1,nargin);
 
-M = 1; N = 1;
+% parse input
+M = 1; N = 1; P = 1;
 for i=1:length(varargin)
     arg = varargin{i};
-    if ~isa(arg, 'function_handle'),   pars{N} = arg; N = N + 1;
-    else,               func{M} = arg; M = M + 1;
+    if isa(arg, 'function_handle') ...
+        || isa(arg, 'pwfitobject')
+        func{M} = arg; M = M + 1;
+    elseif ~isscalar(arg)   % input is parameter
+        pars{N} = arg; N = N + 1;
+    else                    % input is constant
+        cons{P} = arg; P = P + 1;
     end
 end
 
+% erase empty cells
 pars(N:end) = [];
 func(M:end) = [];
+cons(P:end) = [];
 
-% mesh grid parameters...
-[pars{:}] = ndgrid(pars{:});
+% mesh grid parameters & constants...
+[pars{:}, cons{:}] = ndgrid(pars{:}, cons{:});
 % ...and transform to vectors
 pars = cellfun( @(c) c(:), [pars], 'UniformOutput', false );
+cons = cellfun( @(c) c(:), [cons], 'UniformOutput', false );
 
 % evaluate function in all parameters
 data = cell(1, length(func));
@@ -46,7 +58,7 @@ for i=1:length(func)
 end
 
 % write data vectors to file
-nbytes = obj.writeData(pars{:}, data{:});
+nbytes = obj.writeData(pars{:}, data{:}, cons{:});
 
 end
 

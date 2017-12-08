@@ -22,23 +22,31 @@ function nbytes = writeMatrix(obj, varargin)
 
 pars = cell(1,nargin);
 mats = cell(1,nargin);
+cons = cell(1,nargin);
 
-M = 1; N = 1;
+M = 1; N = 1; P = 1;
 for i=1:length(varargin)
     arg = varargin{i};
-    if isvector(arg),   pars{N} = arg; N = N + 1;
-    else,               mats{M} = arg; M = M + 1;
+    if iscell(arg)  % cell of matrix-like vectors
+        mats(M:length(arg)) = arg; M = M + length(arg);
+    elseif ~isvector(arg)
+        mats{M} = arg; M = M + 1;
+    elseif ~isscalar(arg)
+        pars{N} = arg; N = N + 1;
+    else
+        cons{P} = arg; P = P + 1;
     end
 end
 
 pars(N:end) = [];
 mats(M:end) = [];
+cons(P:end) = [];
 
 % mesh grid parameters
-[pars{:}] = ndgrid(pars{:});
+[pars{:}, cons{:}] = ndgrid(pars{:}, cons{:});
 
 % transform to vectors
-data = cellfun( @(c) c(:), [pars, mats], 'UniformOutput', false );
+data = cellfun( @(c) c(:), [pars, mats, cons], 'UniformOutput', false );
 
 % write data vectors to file
 nbytes = obj.writeData(data{:});

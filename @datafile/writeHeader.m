@@ -26,4 +26,11 @@ nbytes = fprintf(obj.fileID, [sprintf(fmt, varargin{:}) '\n']);
 
 obj.nbytes = obj.nbytes + nbytes;
 
+% type of each column
+if length(obj.coltypes) == 1
+    coltypes = cell(1, length(varargin));
+    coltypes(:) = {obj.coltypes};
+    obj.coltypes = coltypes;
+end
+
 end
