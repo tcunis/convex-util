@@ -78,6 +78,14 @@ classdef (Abstract) Quantity
                 obj.unit    = unit;
 
                 obj.magnSI  = obj.conv(magn, unit, obj.unitSI);
+            
+            elseif issparse(magn)                           % sparse matrix
+                warning('Quantities of sparse magnitudes are discouraged. Operations may not be supported yet.');
+                
+                obj.magn = magn;
+                obj.unit = unit;
+                
+                obj.magnSI = obj.conv(magn, unit, obj.unitSI);
                 
             else                         % multiple quantities of same unit
                                          % (quantities of different units
@@ -287,6 +295,21 @@ classdef (Abstract) Quantity
                     units(i,:) = getUnitsSI(obj(i,:));
                 end
             end
+        end
+        
+%%      Sparse & full matrizes
+        function qfll = full(obj)
+            % FULL      Converts sparse matrix to full matrix.
+            qfll = obj.create(full(obj.getSI), obj(1).unitSI);
+        end
+        
+        function qsprs = sparse(obj)
+            % SPARSE    Converts full matrix to sparse matrix.
+            qsprs = obj.create(sparse(obj.getSI), obj(1).unitSI);
+        end
+        
+        function is_sp = issparse(obj)
+            is_sp = issparse(obj.getSI);
         end
         
 %%      Conversion, comparison, and operator overloading        
