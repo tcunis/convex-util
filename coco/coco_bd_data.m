@@ -79,14 +79,25 @@ if isempty(var_idx)
 end
 
 %% Select bifurcation type and index, if given
-if any(strcmp(bd_type, {'min','max'}))
-    minmax = bd_type;
-    if ~isempty(bd_arg) && ~all(strcmp(var, bd_arg))
+if any(strcmp(bd_type, {'min','max'})) || strcmp(bd_type, 'zero')
+    bd_func = bd_type;
+    if ~isempty(bd_arg) %&& ~all(strcmp(var, bd_arg))
         argdata = coco_bd_data(bd, bd_arg);
     else
         argdata = data(var_idx);
     end
-    [~, idxs] = feval(minmax, argdata);
+    
+    switch (bd_func)
+        case 'zero'
+            if ~isempty(bd_idxs)
+                epsilon = bd_idxs;
+            else
+                epsilon = 0;
+            end
+            idxs = find(abs(argdata)<=epsilon);
+        otherwise
+            [~, idxs] = feval(bd_func, argdata);
+    end
 elseif ~isempty(bd_type)
     idxs = coco_bd_idxs(bd, bd_type);
     if strcmp(bd_arg, 'end')
