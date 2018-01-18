@@ -1,15 +1,35 @@
 function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
-%COCO_BD_DATA Retrieves variable data of continuation.
+%COCO_BD_DATA Retrieves column data of continuation.
 %
 %% Usage and description
 %   
 %   [h] = coco_bd_data(bd, var | {var, [var_idx], [var_conv]}, 
 %                      [{} | bd_type | bd_idxs | {bd_type, tp_idxs | 'end'}
-%                          | 'min' | 'max' | {'min' | 'max', arg}],
+%                          | func | {func, [arg], [par]}],
 %                      [default]
 %                     )
 %
-% where arg ::= arg_type | arg_idxs | {arg_type, arg_idxs}.
+% where 
+%   func ::= 'min' | 'max' | 'zero' | 'nzero' | 'stab' | FUNCTION_HANDLE
+%   arg  ::= arg_var | {arg_var, arg_idx}
+%   par  ::= NUMERIC
+%
+% Retrieves column data of |bd|; the column is specified by |var| and
+% |var_idx|, if given.
+%
+% If |func| is given, two parameters are passed to the corresponding
+% function: a variable vector as specified by |arg| and a numeric value as 
+% specified by |par|. Default value and interpretation of the second 
+% parameter depends on the function:
+%
+%  * zero/nzero : tolerance; default: 0
+%  * min/max    : unused
+%  * stab       : stable / unstable flag; default: 1
+%
+% If no |arg| is given for a function, the column data as selected by |var|
+% and |var_idx| is as first argument.
+%
+% Note, that the conversion function |var_conv| is applied at last step.
 %
 %% About
 %
@@ -54,7 +74,7 @@ for i=1:length(type_idxs)
         bd_func = arg; bd_type = 'func';
     elseif ~exist('bd_arg', 'var') && (ischar(arg) || iscell(arg))
                                                         bd_arg  = arg;
-    elseif ~exist('bd_idxs','var') && isreal(arg),      bd_idxs = arg;
+    elseif ~exist('bd_idxs','var') && isnumeric(arg),      bd_idxs = arg;
     end
 end
 
