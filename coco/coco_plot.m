@@ -7,7 +7,7 @@ function [varargout] = coco_plot( bd, varx, vary, type_idxs, plotargin, varargin
 %                       vary | {vary, [vary_idx], [vary_conv]},
 %                       {} | bd_type | bd_idxs | {bd_type, tp_idxs},
 %                       {} | ax | linespec | {ax, linespec},
-%                       [displayname], ['hold off'])
+%                       [displayname])
 %
 %
 %% About
@@ -44,10 +44,8 @@ if ~exist('linespec','var'),                       linespec = '';               
 
 for i=1:length(varargin)
     arg = varargin{i};
-    if ~exist('holdoff','var') && strcmp(arg, 'hold off'), holdoff = 1; continue; end
     if ~exist('dispname','var'),                      dispname = arg; continue; end
 end
-if ~exist('holdoff','var'),                              holdoff = 0;           end
 if ~exist('dispname','var'),                          dispname = {};            end
 
 %% Select data
@@ -71,11 +69,5 @@ if nargout > 0
     varargout{:} = h;
 end
 
-%% Hold on/off
-if holdoff
-    hold off
-else
-    hold on
-end
 
 end
