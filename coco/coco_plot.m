@@ -25,7 +25,14 @@ function [varargout] = coco_plot( bd, varx, vary, type_idxs, plotargin, varargin
 
 
 %% Select arguments
-if ~iscell(plotargin),  plotargin = {plotargin};    end
+if ~exist('type_idxs', 'var')
+    type_idxs = {};                      
+end
+if ~exist('plotargin', 'var')
+    plotargin = {};
+elseif ~iscell(plotargin)
+    plotargin = {plotargin};    
+end
 
 for i=1:length(plotargin)
     arg = plotargin{i};
