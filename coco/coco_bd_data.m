@@ -50,6 +50,8 @@ if ~exist('type_idxs','var'),   type_idxs = {};                         end
 for i=1:length(type_idxs)
     arg = type_idxs{i};
     if ~exist('bd_type','var') && ischar(arg),          bd_type = arg;
+    elseif ~exist('bd_func', 'var') && isfunc(arg)
+        bd_func = arg; bd_type = 'func';
     elseif ~exist('bd_arg', 'var') && (ischar(arg) || iscell(arg))
                                                         bd_arg  = arg;
     elseif ~exist('bd_idxs','var') && isreal(arg),      bd_idxs = arg;
@@ -81,6 +83,9 @@ end
 %% Select bifurcation type and index, if given
 
 switch (bd_type)
+    case 'func'
+        % custom function evaluation
+        % nothing to do here
     case 'min'
         bd_func = @(x,~) eq(x,min(x));
     case 'max'
