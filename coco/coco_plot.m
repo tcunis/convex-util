@@ -26,7 +26,9 @@ function [varargout] = coco_plot( bd, varx, vary, type_idxs, plotargin, varargin
 
 %% Select arguments
 if ~exist('type_idxs', 'var')
-    type_idxs = {};                      
+    type_idxs = {};
+elseif ~iscell(type_idxs)
+    type_idxs = {type_idxs};
 end
 if ~exist('plotargin', 'var')
     plotargin = {};
@@ -61,6 +63,11 @@ end
 h = plot(ax, Xvec, Yvec, linespec);
 
 hold on
+
+%% Unstable plot
+if length(type_idxs) == 1 && strcmp(type_idxs{1}, 'stab')
+    coco_plot(bd, varx, vary, [type_idxs {0}], {ax, [linespec '--']});
+end
 
 %% Set displayname
 if ~iscell(dispname) && ~isempty(h)
