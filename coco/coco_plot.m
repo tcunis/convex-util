@@ -60,6 +60,8 @@ end
 %% Plot
 h = plot(ax, Xvec, Yvec, linespec);
 
+hold on
+
 %% Set displayname
 if ~iscell(dispname) && ~isempty(h)
     h.DisplayName = dispname;
