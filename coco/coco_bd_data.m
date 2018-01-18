@@ -58,7 +58,7 @@ end
 
 if ~exist('var_idx','var'),     var_idx = [];                           end
 if ~exist('var_conv','var'),	var_conv = @double;                     end
-if ~exist('bd_type','var'),     bd_type = [];                           end
+if ~exist('bd_type','var'),     bd_type = '';                           end
 if ~exist('bd_arg', 'var'),     bd_arg  = [];                           end
 if ~exist('bd_idxs','var'),     bd_idxs = [];                           end
 if ~exist('default','var'),     default = @zeros;                       end
@@ -79,25 +79,41 @@ if isempty(var_idx)
 end
 
 %% Select bifurcation type and index, if given
-if any(strcmp(bd_type, {'min','max'})) || strcmp(bd_type, 'zero')
-    bd_func = bd_type;
+
+switch (bd_type)
+    case 'min'
+        bd_func = @(x,~) eq(x,min(x));
+    case 'max'
+        bd_func = @(x,~) eq(x,max(x));
+    case 'zero'
+        bd_func = @(x,p) le(abs(x),p);
+    case 'nzero'
+        bd_func = @(x,p) gt(abs(x),p);
+    case 'stab'
+        bd_func = @(x,p) eq(x,~gt(p,0));
+        bd_arg  = 'ep.test.USTAB';
+        funcpar = 1;
+    otherwise
+        bd_func = {};
+end
+
+if ~isempty(bd_func)
+    % determine argument data
     if ~isempty(bd_arg) %&& ~all(strcmp(var, bd_arg))
         argdata = coco_bd_data(bd, bd_arg);
     else
-        argdata = data(var_idx);
+        argdata = data(var_idx,:);
     end
     
-    switch (bd_func)
-        case 'zero'
-            if ~isempty(bd_idxs)
-                epsilon = bd_idxs;
-            else
-                epsilon = 0;
-            end
-            idxs = find(abs(argdata)<=epsilon);
-        otherwise
-            [~, idxs] = feval(bd_func, argdata);
+    % determine function parameter
+    if ~isempty(bd_idxs)
+        funcpar = bd_idxs;
+    elseif ~exist('funcpar', 'var')
+        funcpar = 0;
     end
+    
+    idxs = find(bd_func(argdata,funcpar));
+            
 elseif ~isempty(bd_type)
     idxs = coco_bd_idxs(bd, bd_type);
     if strcmp(bd_arg, 'end')
