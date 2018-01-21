@@ -18,7 +18,7 @@ function [data, y] = coco_anonym(~, data, u)
 %
 %% See also
 %
-% See COCO_ADD_FUNC.
+% See COCO_ADD_ANONYM, COCO_ADD_FUNC.
 %
 %%
 

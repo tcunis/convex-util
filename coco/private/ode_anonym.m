@@ -19,7 +19,7 @@ function [data, y] = ode_anonym(prob, data, u)
 %
 %% See also
 %
-% See COCO_ADD_FUNC.
+% See ODE_ADD_ANONYM, COCO_ADD_FUNC.
 %
 %%
 
