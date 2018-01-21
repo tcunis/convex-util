@@ -115,7 +115,7 @@ switch (bd_type)
     case 'nzero'
         bd_func = @(x,p) gt(abs(x),p);
     case 'stab'
-        bd_func = @(x,p) eq(x,~gt(p,0));
+        bd_func = @(x,p) xor(x,p);
         bd_arg  = 'ep.test.USTAB';
         funcpar = 1;
     otherwise
