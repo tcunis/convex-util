@@ -8,7 +8,7 @@ function prob = pw_isol2ep(prob, oid, f1, f2, phi, varargin)
 % with
 %    F1 ::= f1 | {f1 [df1dx [df1dp]]}
 %    F2 ::= f2 | {f2 [df2dx [dfxdp]]}
-%   PHI ::= phi | {phi ['<'|'>'] [phi0]}
+%   PHI ::= phi | {phi ['<'|'>'] [phi0 [epsilon]]}
 %
 % Starts a continuation of equilibrium points of f(x,p), where f is a 
 % piece-wise defined, non-linear function
@@ -53,14 +53,16 @@ pw_spec = {
      'PHI',     '',     '@',  'phihan',  [], 'read', {}
      'DIR',     '',   'str',     'dir', '>', 'read', {}
     'PHI0',     '',   'num',    'phi0',   0, 'read', {}
+     'EPS',     '',   'num',     'eps',   0, 'read', {}
   };
 [args, opts] = coco_parse(grammar, args_spec, opts_spec, f1{:}, varargin{:});
-[pw] = coco_parse('PHI [DIR] [PHI0]', pw_spec, {}, phi{:});
+[pw] = coco_parse('PHI [DIR] [PHI0 [EPS]]', pw_spec, {}, phi{:});
 
 [sol, data] = ep_read_solution('', '', args);
 
 pw.f1 = f1;
 pw.f2 = f2;
+pw.cnt = 0;
 
 data.pw = pw;
 

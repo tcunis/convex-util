@@ -42,12 +42,15 @@ switch pw.dir
     case '>'
         f = pw.f2;
         pw.dir = '<';
+        phi0 = pw.phi0 - pw.eps*pw.cnt;
     case '<'
         f = pw.f1;
         pw.dir = '>';
+        phi0 = pw.phi0 + pw.eps*pw.cnt;
     otherwise
         error('%s: Undefined direction ''%s''.', mfilename, pw.dir);
 end
+pw.cnt = pw.cnt + 1;
 
 func_spec = {
        'F',     '',     '@',    'fhan', [], 'read', {}
@@ -81,7 +84,7 @@ else
 end
 
 prob = ode_add_anonym(prob, 'boundary', pw.phihan, 'regular', 'phi');
-prob = coco_add_event(prob, 'PW', 'boundary', 'phi', pw.dir, pw.phi0);
+prob = coco_add_event(prob, 'PW', 'boundary', 'phi', pw.dir, phi0);
 
 
 end
