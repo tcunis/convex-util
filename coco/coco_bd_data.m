@@ -11,7 +11,8 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %
 % where 
 %   func ::= 'min' | 'max' | 'zero' | 'nzero' 
-%                  | 'cross' | 'stab' | FUNCTION_HANDLE
+%                  | 'pos' | 'neg'  | 'cross' 
+%                  | 'stab' | FUNCTION_HANDLE
 %   arg  ::= arg_var | {arg_var, arg_idx}
 %   par  ::= NUMERIC
 %
@@ -25,6 +26,7 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %
 %  * zero/nzero : tolerance; default: 0
 %  * cross      : threshold; default: 0
+%  * pos/neg    : threshold; default: 0
 %  * min/max    : unused
 %  * stab       : stable / unstable flag; default: 1
 %
@@ -112,6 +114,10 @@ switch (bd_type)
         bd_func = @(x,~) eq(x,min(x));
     case 'max'
         bd_func = @(x,~) eq(x,max(x));
+    case 'neg'
+        bd_func = @(x,p) le(x,p);
+    case 'pos'
+        bd_func = @(x,p) ge(x,p);
     case 'zero'
         bd_func = @(x,p) le(abs(x),p);
     case 'nzero'
