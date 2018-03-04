@@ -127,7 +127,7 @@ switch (bd_type)
         bd_func = @(x,p) aux(x-p);
     case 'stab'
         bd_func = @(x,p) xor(x,p);
-        bd_arg  = 'ep.test.USTAB';
+        if isempty(bd_arg), bd_arg  = 'ep.test.USTAB'; end
         funcpar = 1;
     otherwise
         bd_func = {};

@@ -65,7 +65,7 @@ h = plot(ax, Xvec, Yvec, linespec);
 hold on
 
 %% Unstable plot
-if length(type_idxs) == 1 && strcmp(type_idxs{1}, 'stab')
+if ~isempty(type_idxs) && strcmp(type_idxs{1}, 'stab') && ~isnumeric(type_idxs{end})
     coco_plot(bd, varx, vary, [type_idxs {0}], {ax, [linespec '--']});
 end
 
