@@ -7,7 +7,7 @@ function [varargout] = coco_plot( bd, varx, vary, type_idxs, plotargin, varargin
 %                       vary | {vary, [vary_idx], [vary_conv]},
 %                       {} | bd_type | bd_idxs | {bd_type, tp_idxs},
 %                       {} | ax | linespec | {ax, linespec},
-%                       [displayname])
+%                       [displayname], [plothandle])
 %
 %
 %% About
@@ -15,7 +15,7 @@ function [varargout] = coco_plot( bd, varx, vary, type_idxs, plotargin, varargin
 % * Author:     Torbjoern Cunis
 % * Email:      <mailto:torbjoern.cunis@onera.fr>
 % * Created:    2016-12-20
-% * Changed:    2017-01-10
+% * Changed:    2018-03-04
 %
 %% See also
 %
@@ -46,9 +46,11 @@ if ~exist('linespec','var'),                       linespec = '';               
 
 for i=1:length(varargin)
     arg = varargin{i};
-    if ~exist('dispname','var'),                      dispname = arg; continue; end
+    if ~exist('dispname','var') && ischar(arg),       dispname = arg; continue; end
+    if ~exist('plothan','var') && isa(arg,'function_handle'), plothan = arg;    end
 end
 if ~exist('dispname','var'),                          dispname = {};            end
+if ~exist('plothan','var'),                           plothan = @plot;          end
 
 %% Select data
 if ~isempty(bd)
@@ -60,13 +62,13 @@ else
 end
 
 %% Plot
-h = plot(ax, Xvec, Yvec, linespec);
+h = plothan(ax, Xvec, Yvec, linespec);
 
 hold on
 
 %% Unstable plot
 if ~isempty(type_idxs) && strcmp(type_idxs{1}, 'stab') && ~isnumeric(type_idxs{end})
-    coco_plot(bd, varx, vary, [type_idxs {0}], {ax, [linespec '--']});
+    coco_plot(bd, varx, vary, [type_idxs {0}], {ax, [linespec '--']}, plothan);
 end
 
 %% Set displayname
