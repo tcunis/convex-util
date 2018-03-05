@@ -110,10 +110,10 @@ end
 
 %% Linear system
 % matrices A, B, C, D as functions of x, u, mu
-A = symfun(dfdx, [X; U; Mu]);
-B = symfun(dfdu, [X; U; Mu]);
-C = symfun(dhdx, [X; U; Mu]);
-D = symfun(dhdu, [X; U; Mu]);
+A = matlabFunction(symfun(dfdx, [X; U; Mu]));
+B = matlabFunction(symfun(dfdu, [X; U; Mu]));
+C = matlabFunction(symfun(dhdx, [X; U; Mu]));
+D = matlabFunction(symfun(dhdu, [X; U; Mu]));
 
 obj = linss(A, B, C, D, x0, u0, mu0);
 
