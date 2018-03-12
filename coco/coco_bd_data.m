@@ -10,7 +10,9 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %                     )
 %
 % where 
-%   func ::= 'min' | 'max' | 'zero' | 'nzero' | 'stab' | FUNCTION_HANDLE
+%   func ::= 'min' | 'max' | 'zero' | 'nzero' 
+%                  | 'pos' | 'neg'  | 'cross' 
+%                  | 'stab' | FUNCTION_HANDLE
 %   arg  ::= arg_var | {arg_var, arg_idx}
 %   par  ::= NUMERIC
 %
@@ -23,6 +25,8 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 % parameter depends on the function:
 %
 %  * zero/nzero : tolerance; default: 0
+%  * cross      : threshold; default: 0
+%  * pos/neg    : threshold; default: 0
 %  * min/max    : unused
 %  * stab       : stable / unstable flag; default: 1
 %
@@ -110,13 +114,20 @@ switch (bd_type)
         bd_func = @(x,~) eq(x,min(x));
     case 'max'
         bd_func = @(x,~) eq(x,max(x));
+    case 'neg'
+        bd_func = @(x,p) le(x,p);
+    case 'pos'
+        bd_func = @(x,p) ge(x,p);
     case 'zero'
         bd_func = @(x,p) le(abs(x),p);
     case 'nzero'
         bd_func = @(x,p) gt(abs(x),p);
+    case 'cross'
+        aux     = @(v) eq(min(v.^2),v.^2);
+        bd_func = @(x,p) aux(x-p);
     case 'stab'
         bd_func = @(x,p) xor(x,p);
-        bd_arg  = 'ep.test.USTAB';
+        if isempty(bd_arg), bd_arg  = 'ep.test.USTAB'; end
         funcpar = 1;
     otherwise
         bd_func = {};
