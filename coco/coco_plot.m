@@ -54,8 +54,8 @@ if ~exist('plothan','var'),                           plothan = @plot;          
 
 %% Select data
 if ~isempty(bd)
-    Xvec = coco_bd_data(bd, varx, type_idxs);
-    Yvec = coco_bd_data(bd, vary, type_idxs);
+    Xvec = coco_plot_data(bd, varx, type_idxs);
+    Yvec = coco_plot_data(bd, vary, type_idxs);
 else
     Xvec = [];
     Yvec = [];
