@@ -64,7 +64,8 @@ end
 
 for i=1:length(varargin)
     arg = varargin{i};
-    if ~exist('type_idxs','var') && iscell(arg),        type_idxs = arg;         
+    if ~exist('type_idxs','var') && iscell(arg),        type_idxs = arg;
+    elseif ~exist('plot','var') && isplot(arg),         plot = true;
     elseif ~exist('type_idxs','var') && ~isfunc(arg),	type_idxs = {arg};  
     elseif ~exist('default', 'var') && isfunc(arg),     default = arg;        
     end
@@ -88,6 +89,7 @@ if ~exist('bd_type','var'),     bd_type = '';                           end
 if ~exist('bd_arg', 'var'),     bd_arg  = [];                           end
 if ~exist('bd_idxs','var'),     bd_idxs = [];                           end
 if ~exist('default','var'),     default = @zeros;                       end
+if ~exist('plot','var'),        plot = false;                           end
 
 %% Empty variable request
 if isempty(var)
@@ -163,8 +165,22 @@ else
     idxs = 1:size(data, 2);
 end
 
+
 %% Convert and return data
-data = var_conv(data(var_idx,idxs));
+% determine variable indices
+data = data(var_idx,:);
+
+% determine data rows
+if plot
+    fdata = nan(size(data));
+    fdata(:,idxs) = data(:,idxs);
+    data = fdata;
+else
+    data = data(:,idxs);
+end
+
+% convert data
+data = var_conv(data);
 
 end
 
@@ -174,4 +190,10 @@ function tf = isfunc(A)
 %ISFUNC     Determines whether input is function handle.
 
     tf = isa(A, 'function_handle');
+end
+
+function tf = isplot(A)
+%ISPLOT     Determines whether input is string literal 'plot'.
+
+    tf = ischar(A) && strcmp(A, 'plot');
 end

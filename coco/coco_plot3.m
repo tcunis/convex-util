@@ -54,9 +54,9 @@ if ~exist('dispname','var'),                          dispname = {};            
 if ~exist('plothan','var'),                           plothan = @plot3;         end
 
 %% Select data
-Xvec = coco_bd_data(bd, varx, type_idxs);
-Yvec = coco_bd_data(bd, vary, type_idxs);
-Zvec = coco_bd_data(bd, varz, type_idxs);
+Xvec = coco_plot_data(bd, varx, type_idxs);
+Yvec = coco_plot_data(bd, vary, type_idxs);
+Zvec = coco_plot_data(bd, varz, type_idxs);
 
 
 %% Plot

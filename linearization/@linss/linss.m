@@ -46,8 +46,12 @@ classdef linss < ss
             end
         end
         
-        function J = jacobian(obj)
+        function J = jacobian(obj, v)
             J = obj.A;
+            
+            if nargin > 1
+                J = J(v,v);
+            end
         end
     end
 end
