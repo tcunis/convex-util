@@ -37,9 +37,9 @@ args = coco_parse(grammar, args_spec, opts_spec, varargin{:});
 
 pw = data.pw;
 switch pw.dir
-    case '>'
-        phi0 = pw.phi0 - pw.eps*pw.cnt;
     case '<'
+        phi0 = pw.phi0 - pw.eps*pw.cnt;
+    case '>'
         phi0 = pw.phi0 + pw.eps*pw.cnt;
     otherwise
         error('%s: Undefined direction ''%s''.', mfilename, pw.dir);
