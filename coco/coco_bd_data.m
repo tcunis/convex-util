@@ -1,4 +1,4 @@
-function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
+function varargout = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %COCO_BD_DATA Retrieves column data of continuation.
 %
 %% Usage and description
@@ -46,7 +46,18 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 
 
 %% Select arguments
-if ~iscell(var),        var = {var};                    end
+if ~iscell(var)
+    var = {var};
+elseif length(var) > 1 && ismultivar(var)
+    varargout = cell(size(var));
+    for i=1:length(var)
+        varargout{i} = coco_bd_data(bd, var{i}, varargin{:});
+    end
+    if nargout <= 1
+        varargout = {vertcat(varargout{:})};
+    end
+    return
+end
 
 % if nargin < 3
 %     type_idxs = {};
@@ -180,7 +191,7 @@ else
 end
 
 % convert data
-data = var_conv(data);
+varargout = {var_conv(data)};
 
 end
 
@@ -196,4 +207,16 @@ function tf = isplot(A)
 %ISPLOT     Determines whether input is string literal 'plot'.
 
     tf = ischar(A) && strcmp(A, 'plot');
+end
+
+function tf = ismultivar(A)
+%ISMULTIVAR     Determines whether cells are multiple variable identifier.
+
+    tf = true;
+    for i=1:length(A)
+        if ~iscell(A{i}) && ~ischar(A{i})
+            tf = false;
+            return
+        end
+    end
 end
