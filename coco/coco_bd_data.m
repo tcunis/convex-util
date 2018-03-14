@@ -104,9 +104,9 @@ if ~exist('plot','var'),        plot = false;                           end
 
 %% Empty variable request
 if isempty(var)
-    pseudo = coco_bd_data(bd, 'PT', type_idxs);
+%     pseudo = coco_bd_data(bd, 'PT', type_idxs);
     
-    data = default(size(pseudo));
+    varargout = {[]};
 else
     
 %% Get variable data
