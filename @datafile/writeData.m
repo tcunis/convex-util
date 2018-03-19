@@ -20,22 +20,30 @@ function nbytes = writeData(obj, varargin)
 %
 %%
 
+data = cell(size(varargin));
 
 % check for |data| input
-if length(varargin) == 1 && ~isvector(varargin{1})
-    % data matrix given
-    data = varargin{1};
-elseif isrow(varargin{1})
-    % row vectors given
-    data = vertcat(varargin{:});
-elseif iscolumn(varargin{1})
-    % column vectors given
-    data = permute(horzcat(varargin{:}), [2 1]);
-else
-    % undefined input
-    error('Undefined function for given input.')
+for i=1:length(varargin)
+    arg = varargin{i};
+    if length(varargin) == 1 && ~isvector(arg)
+        % data matrix given
+        data = {arg};
+    elseif i > 1 && isscalar(arg)
+        % scalar given
+        data{i} = arg*ones(size(data{1}));
+    elseif isrow(arg)
+        % row vector given
+        data{i} = arg;
+    elseif iscolumn(arg)
+        % column vectors given
+        data{i} = permute(arg, [2 1]);
+    else
+        % undefined input
+        error('Undefined function for given input.')
+    end
 end
 
+data = vertcat(data{:});
 
 % number of columns equals number of rows in |data|
 cols = size(data, 1);
