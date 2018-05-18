@@ -62,7 +62,11 @@ else
 end
 
 %% Plot
-h = plothan(ax, Xvec, Yvec, linespec);
+if isempty(Yvec)
+    h = plothan(ax, Xvec, linespec);
+else
+    h = plothan(ax, Xvec, Yvec, linespec);
+end
 
 hold on
 
