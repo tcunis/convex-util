@@ -47,6 +47,7 @@ classdef datafile < handle
         nbytes = writeMatrix(obj, varargin);
         nbytes = writeFunction(obj, varargin);
         nbytes = writeBifurcation(obj, bd, varargin);
+        nbytes = writePolynomial(obj, varargin);
         
         function obj = datafile(data_file, encoding)
            if ~exist('encoding', 'var'), encoding = 'UTF8'; end
@@ -107,6 +108,12 @@ classdef datafile < handle
             end
             
             [varargout{:}] = datafile.writeToFile(file, {@writeBifurcation, bd}, header, varargin{:});
+        end
+        
+        function varargout = writePolyToFile(file, header, varargin)
+            varargout = cell(1, nargout);
+            
+            [varargout{:}] = datafile.writeToFile(file, @writePolynomial, header, varargin{:});
         end
     end
     
