@@ -1,4 +1,4 @@
-function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
+function varargout = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %COCO_BD_DATA Retrieves column data of continuation.
 %
 %% Usage and description
@@ -10,7 +10,9 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %                     )
 %
 % where 
-%   func ::= 'min' | 'max' | 'zero' | 'nzero' | 'stab' | FUNCTION_HANDLE
+%   func ::= 'min' | 'max' | 'zero' | 'nzero' 
+%                  | 'pos' | 'neg'  | 'cross' 
+%                  | 'stab' | FUNCTION_HANDLE
 %   arg  ::= arg_var | {arg_var, arg_idx}
 %   par  ::= NUMERIC
 %
@@ -23,6 +25,8 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 % parameter depends on the function:
 %
 %  * zero/nzero : tolerance; default: 0
+%  * cross      : threshold; default: 0
+%  * pos/neg    : threshold; default: 0
 %  * min/max    : unused
 %  * stab       : stable / unstable flag; default: 1
 %
@@ -42,7 +46,18 @@ function data = coco_bd_data(bd, var, varargin) %type_idxs, default)
 
 
 %% Select arguments
-if ~iscell(var),        var = {var};                    end
+if ~iscell(var)
+    var = {var};
+elseif length(var) > 1 && ismultivar(var)
+    varargout = cell(size(var));
+    for i=1:length(var)
+        varargout{i} = coco_bd_data(bd, var{i}, varargin{:});
+    end
+    if nargout <= 1
+        varargout = {vertcat(varargout{:})};
+    end
+    return
+end
 
 % if nargin < 3
 %     type_idxs = {};
@@ -60,7 +75,8 @@ end
 
 for i=1:length(varargin)
     arg = varargin{i};
-    if ~exist('type_idxs','var') && iscell(arg),        type_idxs = arg;         
+    if ~exist('type_idxs','var') && iscell(arg),        type_idxs = arg;
+    elseif ~exist('plot','var') && isplot(arg),         plot = true;
     elseif ~exist('type_idxs','var') && ~isfunc(arg),	type_idxs = {arg};  
     elseif ~exist('default', 'var') && isfunc(arg),     default = arg;        
     end
@@ -84,12 +100,13 @@ if ~exist('bd_type','var'),     bd_type = '';                           end
 if ~exist('bd_arg', 'var'),     bd_arg  = [];                           end
 if ~exist('bd_idxs','var'),     bd_idxs = [];                           end
 if ~exist('default','var'),     default = @zeros;                       end
+if ~exist('plot','var'),        plot = false;                           end
 
 %% Empty variable request
 if isempty(var)
-    pseudo = coco_bd_data(bd, 'PT', type_idxs);
+%     pseudo = coco_bd_data(bd, 'PT', type_idxs);
     
-    data = default(size(pseudo));
+    varargout = {[]};
 else
     
 %% Get variable data
@@ -110,13 +127,20 @@ switch (bd_type)
         bd_func = @(x,~) eq(x,min(x));
     case 'max'
         bd_func = @(x,~) eq(x,max(x));
+    case 'neg'
+        bd_func = @(x,p) le(x,p);
+    case 'pos'
+        bd_func = @(x,p) ge(x,p);
     case 'zero'
         bd_func = @(x,p) le(abs(x),p);
     case 'nzero'
         bd_func = @(x,p) gt(abs(x),p);
+    case 'cross'
+        aux     = @(v) eq(min(v.^2),v.^2);
+        bd_func = @(x,p) aux(x-p);
     case 'stab'
         bd_func = @(x,p) xor(x,p);
-        bd_arg  = 'ep.test.USTAB';
+        if isempty(bd_arg), bd_arg  = 'ep.test.USTAB'; end
         funcpar = 1;
     otherwise
         bd_func = {};
@@ -152,8 +176,22 @@ else
     idxs = 1:size(data, 2);
 end
 
+
 %% Convert and return data
-data = var_conv(data(var_idx,idxs));
+% determine variable indices
+data = data(var_idx,:);
+
+% determine data rows
+if plot
+    fdata = nan(size(data));
+    fdata(:,idxs) = data(:,idxs);
+    data = fdata;
+else
+    data = data(:,idxs);
+end
+
+% convert data
+varargout = {var_conv(data)};
 
 end
 
@@ -163,4 +201,22 @@ function tf = isfunc(A)
 %ISFUNC     Determines whether input is function handle.
 
     tf = isa(A, 'function_handle');
+end
+
+function tf = isplot(A)
+%ISPLOT     Determines whether input is string literal 'plot'.
+
+    tf = ischar(A) && strcmp(A, 'plot');
+end
+
+function tf = ismultivar(A)
+%ISMULTIVAR     Determines whether cells are multiple variable identifier.
+
+    tf = true;
+    for i=1:length(A)
+        if ~iscell(A{i}) && ~ischar(A{i})
+            tf = false;
+            return
+        end
+    end
 end

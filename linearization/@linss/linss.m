@@ -32,17 +32,25 @@ classdef linss < ss
             obj.x0 = x0;         obj.u0 = u0;          obj.p0 = p0;
         end
         
-        function out = subsref(obj, s)
-            switch s.type
+        function varargout = subsref(obj, s)
+            switch s(1).type
                 case '()'
                 if length(s.subs) < 3, p0 = 0; else, p0 = s.subs{3}; end
-                out = linss(obj.Alin, obj.Blin, obj.Clin, obj.Dlin, ...
-                            s.subs{1}, s.subs{2}, p0);
-                out.StateName  = obj.StateName;
-                out.InputName  = obj.InputName;
-                out.OutputName = obj.OutputName;
+                varargout = {linss(obj.Alin, obj.Blin, obj.Clin, obj.Dlin, ...
+                              s.subs{1}, s.subs{2}, p0)};
+                varargout{1}.StateName  = obj.StateName;
+                varargout{1}.InputName  = obj.InputName;
+                varargout{1}.OutputName = obj.OutputName;
                 otherwise
-                out = obj.(s.subs);
+                varargout{:} = builtin('subsref',obj,s);
+            end
+        end
+        
+        function J = jacobian(obj, v)
+            J = obj.A;
+            
+            if nargin > 1
+                J = J(v,v);
             end
         end
     end

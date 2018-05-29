@@ -46,6 +46,8 @@ classdef datafile < handle
         nbytes = writeData(obj, varargin);
         nbytes = writeMatrix(obj, varargin);
         nbytes = writeFunction(obj, varargin);
+        nbytes = writeBifurcation(obj, bd, varargin);
+        nbytes = writePolynomial(obj, varargin);
         
         function obj = datafile(data_file, encoding)
            if ~exist('encoding', 'var'), encoding = 'UTF8'; end
@@ -97,11 +99,34 @@ classdef datafile < handle
             
             [varargout{:}] = datafile.writeToFile(file, @writeFunction, header, varargin{:});
         end
+        
+        function varargout = writeBdToFile(file, bd, header, varargin)
+            varargout = cell(1, nargout);
+            
+            if isempty(varargin)
+                varargin = header;
+            end
+            
+            [varargout{:}] = datafile.writeToFile(file, {@writeBifurcation, bd}, header, varargin{:});
+        end
+        
+        function varargout = writePolyToFile(file, header, varargin)
+            varargout = cell(1, nargout);
+            
+            [varargout{:}] = datafile.writeToFile(file, @writePolynomial, header, varargin{:});
+        end
     end
     
     methods (Static, Access = protected)
         function [fileID, df] = writeToFile(file, handle, header, varargin)
             if ~iscell(header), header = {header}; end
+            
+            if iscell(handle) && length(handle) > 1
+                pars = handle(2:end);
+                handle = handle{1};
+            else
+                pars = {};
+            end
             
             for i=1:length(varargin)
                 arg = varargin{i};
@@ -115,7 +140,7 @@ classdef datafile < handle
             df = datafile(file);
             df.set(settings{:});
             df.writeHeader(header{:});
-            handle(df, input{:});
+            handle(df, pars{:}, input{:});
             
             if nargout <= 1
                 df.close;

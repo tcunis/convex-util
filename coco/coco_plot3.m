@@ -1,4 +1,4 @@
-function [ h ] = coco_plot3( bd, varx, vary, varz, type_idxs, plotargin, varargin )
+function [ varargout ] = coco_plot3( bd, varx, vary, varz, type_idxs, plotargin, varargin )
 %COCO_PLOT Plots results of continuation in two dimensions.
 %
 %% Usage and description
@@ -8,7 +8,7 @@ function [ h ] = coco_plot3( bd, varx, vary, varz, type_idxs, plotargin, varargi
 %                       varz | {varz, [varz_idx], [varz_conv]},
 %                       {} | bd_type | bd_idxs | {bd_type, tp_idxs},
 %                       {} | ax | linespec | {ax, linespec},
-%                       [displayname], ['hold off'])
+%                       [displayname], [plothandle])
 %
 %
 %% About
@@ -16,17 +16,26 @@ function [ h ] = coco_plot3( bd, varx, vary, varz, type_idxs, plotargin, varargi
 % * Author:     Torbjoern Cunis
 % * Email:      <mailto:torbjoern.cunis@onera.fr>
 % * Created:    2016-12-20
-% * Changed:    2017-01-10
+% * Changed:    2018-03-04
 %
 %% See also
 %
-% See PLOT.
+% See PLOT3.
 %
 %%
 
 
 %% Select arguments
-if ~iscell(plotargin),  plotargin = {plotargin};    end
+if ~exist('type_idxs', 'var')
+    type_idxs = {};
+elseif ~iscell(type_idxs)
+    type_idxs = {type_idxs};
+end
+if ~exist('plotargin', 'var')
+    plotargin = {};
+elseif ~iscell(plotargin)
+    plotargin = {plotargin};    
+end
 
 for i=1:length(plotargin)
     arg = plotargin{i};
@@ -38,31 +47,35 @@ if ~exist('linespec','var'),                       linespec = '';               
 
 for i=1:length(varargin)
     arg = varargin{i};
-    if ~exist('holdoff','var') && strcmp(arg, 'hold off'), holdoff = 1; continue; end
-    if ~exist('dispname','var'),                      dispname = arg; continue; end
+    if ~exist('dispname','var') && ischar(arg),       dispname = arg; continue; end
+    if ~exist('plothan','var') && isa(arg,'function_handle'), plothan = arg;    end
 end
-if ~exist('holdoff','var'),                              holdoff = 0;           end
 if ~exist('dispname','var'),                          dispname = {};            end
+if ~exist('plothan','var'),                           plothan = @plot3;         end
 
 %% Select data
-Xvec = coco_bd_data(bd, varx, type_idxs);
-Yvec = coco_bd_data(bd, vary, type_idxs);
-Zvec = coco_bd_data(bd, varz, type_idxs);
+Xvec = coco_plot_data(bd, varx, type_idxs);
+Yvec = coco_plot_data(bd, vary, type_idxs);
+Zvec = coco_plot_data(bd, varz, type_idxs);
 
 
 %% Plot
-h = plot3(ax, Xvec, Yvec, Zvec, linespec);
+h = plothan(ax, Xvec, Yvec, Zvec, linespec);
+
+hold on
+
+%% Unstable plot
+if ~isempty(type_idxs) && strcmp(type_idxs{1}, 'stab') && ~isnumeric(type_idxs{end})
+    coco_plot3(bd, varx, vary, varz, [type_idxs {0}], {ax, [linespec '--']}, plothan);
+end
 
 %% Set displayname
 if ~iscell(dispname)
     h.DisplayName = dispname;
 end
 
-%% Hold on/off
-if holdoff
-    hold off
-else
-    hold on
+if nargout > 0
+    varargout{:} = h;
 end
 
 end
