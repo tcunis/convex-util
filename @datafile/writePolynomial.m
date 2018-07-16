@@ -42,7 +42,7 @@ for i=1:length(varargin)
         func{M} = arg; M = M + 1;
     elseif ~exist('domain','var') && isrow(arg) && ~isscalar(arg)
         domain = arg;
-    elseif ~exist('npts','var') && isinteger(arg) && (iscolumn(arg) || isscalar(arg))
+    elseif ~exist('npts','var') && (iscolumn(arg) || isscalar(arg))
         npts = arg;
     end
 end
