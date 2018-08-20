@@ -53,5 +53,25 @@ classdef linss < ss
                 J = J(v,v);
             end
         end
+        
+        function [rQ, Qs] = controllable(obj, v)
+            if nargin <= 1 || isempty(v)
+                v = 1:size(obj.B, 2);
+            end
+            
+            Qs = ctrb(obj.A, obj.B(:,v));
+            
+            rQ = rank(Qs);
+        end
+        
+        function [rQ, Qb] = observable(obj, v)
+            if nargin <= 1 || isempty(v)
+                v = 1:size(obj.C, 1);
+            end
+            
+            Qb = obsv(obj.A, obj.C(v,:));
+            
+            rQ = rank(Qb);
+        end
     end
 end
