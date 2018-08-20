@@ -18,5 +18,12 @@ function prob = ode_add_anonym(prob, fid, f, type_specs, varargin)
 %
 %%
 
-    prob = coco_add_func(prob, fid, @ode_anonym, {f}, type_specs, varargin{:});
+    if ~iscell(f)
+        f = {f};
+    else
+        % f = [F DF]
+        varargin = [varargin {'f+df'}];
+    end
+
+    prob = coco_add_func(prob, fid, @ode_anonym, f, type_specs, varargin{:});
 end
