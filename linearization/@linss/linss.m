@@ -19,14 +19,14 @@ classdef linss < ss
     methods
         function obj = linss(A, B, C, D, x0, u0, p0)
             %LINSS
-            if ~iscell(x0), x0 = num2cell(x0); end
-            if ~iscell(u0), u0 = num2cell(u0); end
-            if ~iscell(p0), p0 = num2cell(p0); end
+            if iscell(x0), x0 = cell2mat(x0); end
+            if iscell(u0), u0 = cell2mat(u0); end
+            if iscell(p0), p0 = cell2mat(p0); end
             
-            obj@ss( double(A(x0{:}, u0{:}, p0{:})),  ...
-                    double(B(x0{:}, u0{:}, p0{:})),  ...
-                    double(C(x0{:}, u0{:}, p0{:})),  ...
-                    double(D(x0{:}, u0{:}, p0{:}))   );
+            obj@ss( (A(x0, u0, p0)),  ...
+                    (B(x0, u0, p0)),  ...
+                    (C(x0, u0, p0)),  ...
+                    (D(x0, u0, p0))   );
                 
             obj.Alin = A; obj.Blin = B; obj.Clin = C; obj.Dlin = D;
             obj.x0 = x0;         obj.u0 = u0;          obj.p0 = p0;
