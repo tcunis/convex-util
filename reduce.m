@@ -4,6 +4,7 @@ function varargout = reduce(varargin)
 %% Usage and description
 %
 %   [g1,...,gN] = reduce(f1,...,fN, x1,...,xM)
+%   [...] = reduce(...,'Name',value)
 %
 %% About
 %
@@ -22,13 +23,16 @@ N = 1; M = 1;
 for i=1:length(varargin)
     arg = varargin{i};
     
-    if isa(arg, 'function_handle')
+    if ischar(arg)
+        break;
+    elseif isa(arg, 'function_handle')
         fhan{N} = arg; N = N + 1;
     else
         pvar{M} = arg; M = M + 1;
     end
 end
 
+varargin(1:N+M-2) = [];
 fhan(N:end) = [];
 pvar(M:end) = [];
 
@@ -38,7 +42,7 @@ for i=1:M-1
 end
 
 fsym = cellfun(@(c) c(psym{:}), fhan, 'UniformOutput', false);
-varargout = cellfun(@(c) matlabFunction(c, 'Vars', psym), fsym, 'UniformOutput', false);
+varargout = cellfun(@(c) matlabFunction(c, 'Vars', psym, varargin{:}), fsym, 'UniformOutput', false);
 
 end
 
