@@ -1,5 +1,5 @@
 function [q,A,b] = fit_polygon(p,x,opts)
-% Fits a polygon {x: Ax <= b} into {x: p(x) <= 0}.
+% Fits a polygon {x: Ax <= -b} into {x: p(x) <= 0}.
 
 if nargin < 3
     opts = [];
