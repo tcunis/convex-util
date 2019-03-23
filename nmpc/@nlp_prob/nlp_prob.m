@@ -93,7 +93,7 @@ ocp = [x0;u0;y0;xtrg;utrg;eps];
 % optimization problem
 xk = SX.sym('xk',nx);
 uk = SX.sym('uk',nu);
-dk = SX.sym('dk',nu);
+dk = SX.sym('dk',nd);
 yk = SX.sym('yk',ny);
 sk = SX.sym('sk',1);
 
@@ -283,7 +283,7 @@ function [Ji,gxi,gyi,cui,cxi,cdi,cyi,csi] = nlpstruct(xi,xim,uim,uim2,yi,yim,si)
     cyi = cyk(yi, yub,ylb);
     csi = -Ji(2:end);
 
-    cdi = cdk(dui,dub,dlb);
+    cdi = []; %cdk(dui,dub,dlb);
 
     Ji  = Ji(1);
 end
