@@ -11,8 +11,8 @@ function [T,Xt,Ut,Yt,out,res] = nmpc(nlp,dyn,sz,xtrg,utrg,tspan,espan,x0,u0,y0,a
 %%
 
 % default options
-if ~exist('opts','var')
-    opts = {};
+if ~exist('opts','var') || isempty(opts)
+    opts = struct;
 end
 if sz.nd == 0
     % no limits on input rates

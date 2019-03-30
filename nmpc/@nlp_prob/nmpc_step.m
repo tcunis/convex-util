@@ -104,6 +104,14 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lkm1,vkm1,ocp_res,info] = nmpc_step(nlp,xha
 %     problem.options = optimoptions('fmincon','SpecifyObjectiveGradient',true,opts{:});
 %     [zopt,~,flag,info,dual,grad] = fmincon(problem);
 
+    % copy options from input
+    for fld = fieldnames(opts)'
+        options.ipopt.(fld{:}) = opts.(fld{:});
+    end
+      
+    % set environment variable for PARDISO
+    setenv('OMP_NUM_THREADS', '1');
+
     try
         [zopt,info] = ipopt(z0,problem,options);
         
