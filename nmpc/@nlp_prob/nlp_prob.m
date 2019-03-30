@@ -30,7 +30,7 @@ properties (Access=protected)
 end
 
 methods
-function [nlp,dyn,sz] = nlp_prob(f, g, sz, N, ts, j, Xf, Vf)
+function [nlp,dyn,sz] = nlp_prob(f, g, h, sz, N, ts, j, Xf, Vf)
 % Setups NLP problem.
 %
 %% About
@@ -101,41 +101,41 @@ sk = SX.sym('sk',1);
 xkp1 = xk + ts*f(xk,uk,eps);
 yk0  =         g(xk,uk,eps);
 
-if ny ~= 0
-    ykp1 = yk + ts*g(xk,uk,eps);
-else
-    ykp1 = yk;
+% weight output function
+if isempty(h)
+    h = @(x,u,~) x;
 end
+wk0 = h(xk,uk);
 
 % Casadi functions
 % syntax: name, inputs, outputs, input names, output names
 fd  = Function('fd' , {xk,uk,eps},       {xkp1}       , {'xk','uk','eps'}, {'xkp1'});
 gd  = Function('gd' , {xk,uk,eps},       {yk0 }       , {'xk','uk','eps'}, { 'yk' });
-hd  = Function('hd' , {xk,uk,yk,eps},    {ykp1}  , {'xk','uk','yk','eps'}, {'ykp1'});
+hd  = Function('hd' , {xk,uk,eps},       {wk0 }       , {'xk','uk','eps'}, { 'wk' });
 f_x = Function('f_x', {xk,uk,eps}, {jacobian(xkp1,xk)}, {'xk','uk','eps'}, {'f_x'});
 f_u = Function('f_u', {xk,uk,eps}, {jacobian(xkp1,uk)}, {'xk','uk','eps'}, {'f_u'});
 g_x = Function('g_x', {xk,uk,eps}, {jacobian(yk0, xk)}, {'xk','uk','eps'}, {'g_x'});
 g_u = Function('g_u', {xk,uk,eps}, {jacobian(yk0, uk)}, {'xk','uk','eps'}, {'g_u'});
-h_x = Function('h_x', {xk,uk,eps}, {jacobian(ykp1,xk)}, {'xk','uk','eps'}, {'h_x'});
-h_u = Function('h_u', {xk,uk,eps}, {jacobian(ykp1,uk)}, {'xk','uk','eps'}, {'h_u'});
-h_y = Function('h_y', {xk,uk,eps}, {jacobian(ykp1,yk)}, {'xk','uk','eps'}, {'h_y'});
+h_x = Function('h_x', {xk,uk,eps}, {jacobian(wk0, xk)}, {'xk','uk','eps'}, {'h_x'});
+h_u = Function('h_u', {xk,uk,eps}, {jacobian(wk0, uk)}, {'xk','uk','eps'}, {'h_u'});
+
 
 % stage cost function
 if ~exist('j','var') || isempty(j)
-    j = @(x,u,~,Q,R,xtrg,utrg) 1/2*(x-xtrg)'*Q*(x-xtrg) + 1/2*(u-utrg)'*R*(u-utrg);
+    j = @(w,u,~,Q,R,wtrg,utrg) 1/2*(w-wtrg)'*Q*(w-wtrg) + 1/2*(u-utrg)'*R*(u-utrg);
 end
 
 % terminal cost function
 if ~exist('Vf','var') || isempty(Vf)
-    Vf = @(x,Qf,xtrg,utrg,~) 1/2*(x-xtrg)'*Qf*(x-xtrg);
+    Vf = @(w,Qf,wtrg,utrg,~) 1/2*(w-wtrg)'*Qf*(w-wtrg);
 end
 
-Jk  = Function('Jk', {xk,uk,sk,Q,R,xtrg,utrg}, {j(xk,uk,sk,Q,R,xtrg,utrg)}, {'xk','uk','sk','Q','R','xtrg','utrg'}, {'Jk'});
-Jf  = Function('Jf', {xk,Qf,xtrg,utrg,eps}, {Vf(xk,Qf,xtrg,utrg,eps)}, {'xk' 'Qf' 'xtrg' 'utrg' 'eps'}, {'Vf'});
+Jk  = Function('Jk', {xk,uk,sk,Q,R,xtrg,utrg}, {j(h(xk),uk,sk,Q,R,h(xtrg),utrg)}, {'xk','uk','sk','Q','R','xtrg','utrg'}, {'Jk'});
+Jf  = Function('Jf', {xk,Qf,xtrg,utrg,eps}, {Vf(h(xk),Qf,h(xtrg),utrg,eps)}, {'xk' 'Qf' 'xtrg' 'utrg' 'eps'}, {'Vf'});
 
 % stage constraints
 cuk = Function('cuk',{uk,uub,ulb},{[uk-uub;ulb-uk]},{'uk','uub','ulb'},{'cuk'});
-cxk = Function('cxk',{xk,xub,xlb},{[xk-xub;xlb-xk]},{'xk','xub','xlb'},{'cxk'});
+cxk = Function('cxk',{xk,xub,xlb},{[h(xk)-xub;xlb-h(xk)]},{'xk','xub','xlb'},{'cxk'});
 cdk = Function('cdk',{dk,dub,dlb},{[dk-dub;dlb-dk]},{'dk','dub','dlb'},{'cdk'});
 cyk = Function('cyk',{yk,yub,ylb},{[yk-yub;ylb-yk]},{'yk','yub','ylb'},{'cyk'});
 
@@ -264,9 +264,8 @@ dyn.A = f_x;
 dyn.B = f_u;
 dyn.C = g_x;
 dyn.D = g_u;
-dyn.Ci = h_x;
-dyn.Di = h_u;
-dyn.I  = h_y;
+dyn.Cw = h_x;
+dyn.Dw = h_u;
 
 
 function [Ji,gxi,gyi,cui,cxi,cdi,cyi,csi] = nlpstruct(xi,xim,uim,uim2,yi,yim,si)
@@ -274,7 +273,7 @@ function [Ji,gxi,gyi,cui,cxi,cdi,cyi,csi] = nlpstruct(xi,xim,uim,uim2,yi,yim,si)
 
     Ji  = Jk(xim,uim,si,Q,R,xtrg,utrg);    
     gxi = xi - fd(xim,uim,eps);
-    gyi = yi - hd(xim,uim,yim,eps);
+    gyi = [];
     
     dui = (uim-uim2)/ts;
     
