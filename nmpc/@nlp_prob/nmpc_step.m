@@ -109,8 +109,9 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lkm1,vkm1,ocp_res,info] = nmpc_step(nlp,xha
         options.ipopt.(fld{:}) = opts.(fld{:});
     end
       
-    % set environment variable for PARDISO
-    setenv('OMP_NUM_THREADS', '1');
+    % set environment variables for PARDISO
+%     setenv('OMP_PLACES', 'cores');
+%     setenv('OMP_NUM_THREADS', '2');
 
     try
         [zopt,info] = ipopt(z0,problem,options);

@@ -42,8 +42,8 @@ nsim = length(T);
 neps = length(espan);
 
 % initial optimizer guess
-ukm1 = zeros(sz.nu,sz.N) + u0(1:sz.nu);
-xkm1 = zeros(sz.nx,sz.N) + x0;
+ukm1 = zeros(sz.nu,sz.N) + utrg(1:sz.nu);
+xkm1 = zeros(sz.nx,sz.N) + xtrg;
 ykm1 = zeros(sz.ny,sz.N) + y0(1:sz.ny);
 skm1 = zeros(sz.ns,1);
 lkm1 = zeros(sz.nl,1);
