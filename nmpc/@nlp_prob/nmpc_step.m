@@ -1,4 +1,4 @@
-function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nlp,xhat,uhat,yhat,xtrg,utrg,eps,ukm1,xkm1,ykm1,skm1,lkm1,vkm1,okm1,args,sz,opts)
+function [u_nmpc,uopt,xopt,yopt,sopt,dopt,ocp_res,info] = nmpc_step(nlp,xhat,uhat,yhat,xtrg,utrg,eps,ukm1,xkm1,ykm1,skm1,dkm1,args,sz,opts)
 % Find optimal NMPC feedback law
 %
 
@@ -25,13 +25,18 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nl
     dub = args.dub;
     ylb = args.ylb;
     yub = args.yub;
+    wlb = args.wlb;
+    wub = args.wub;
 
     gamma = args.gamma;
     
     nz = sz.nz;
     ns = sz.ns;
+    nw = sz.nw;
     nl = sz.nl;
     nv = sz.nv;
+    
+    N = sz.N;
 
     z = SX.sym('z',nz,1);
     l = SX.sym('l',nl,1);
@@ -43,9 +48,9 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nl
 
     problem = []; options = [];
 
-    % constraints & first order derivatives
+    % nonlinear constraints & first order derivatives
     [g,gz] = nlp.eq_cstr(ocp,z);
-    [h,hz] = nlp.ieq_cstr(ocp,z,uub,ulb,xub,xlb,dub,dlb,yub,ylb);
+    [h,hz] = nlp.ieq_cstr(ocp,z,wub,wlb,dub,dlb,yub,ylb);
     % ensure sparse matrizes
     g = sparsify(g); gz = sparsify(gz);
     h = sparsify(h); hz = sparsify(hz);
@@ -64,12 +69,12 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nl
     options.cu = [zeros(nl,1); zeros(nv,1)];
 
     % warm start
-    if ~isempty(lkm1) && ~isempty(vkm1) && ~isempty(okm1)
+    if ~isempty(dkm1)
         options.ipopt.warm_start_init_point = 'yes';
         
-        options.lambda = [lkm1; vkm1];
-        options.zl = okm1(1:nz);
-        options.zu = okm1(nz+1:end);
+        options.lambda = [dkm1.l; dkm1.v];
+        options.zl = dkm1.o(1:nz);
+        options.zu = dkm1.o(nz+1:end);
     end
     
     problem.jacobianstructure = @() cjsp;
@@ -101,6 +106,20 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nl
 
     problem.hessianstructure = @() hesp;
     
+    % state constraints
+    options.lb = [
+        repmat(ulb,N,1)
+        repmat(xlb,N,1)
+              -Inf(o,1)
+            zeros(ns,1)
+    ];
+    options.ub = [
+        repmat(uub,N,1)
+        repmat(xub,N,1)
+              +Inf(o,1)
+             +Inf(ns,1)
+	];
+    
     % initial guess
     z0 = [ukm1;xkm1;ykm1;skm1];
     
@@ -128,6 +147,8 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nl
         info.message = [];
     catch ME
         zopt = z0;
+        info.zl      = zeros(nz,1);
+        info.zu      = zeros(nz,1);
         info.lambda  = zeros(nl+nv,1);
         info.message = ME.message;
         info.status  = -200;
@@ -143,17 +164,17 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nl
     yopt = zopt(m+n+1:m+n+o);
     sopt = zopt(m+n+o+1:end);
     
-    lopt = info.lambda(1:nl);
-    vopt = info.lambda(nl+1:end);
-    oopt = [info.zl; info.zu];
+    dopt.l = info.lambda(1:nl);
+    dopt.v = info.lambda(nl+1:end);
+    dopt.o = [info.zl; info.zu];
 
     % residuals
     dual = info.lambda;
-    grad = problem.laggrad(zopt,1,dual);
+    grad = problem.laggrad(zopt,1,dual) - info.zl + info.zu;
     ceq  = full(ceq(zopt));
-    ieq  = full(ieq(zopt));
+    ieq  = [full(ieq(zopt)); options.lb-zopt; zopt-options.ub];
 %     [eq,ieq] = cstr(zopt);
-    ocp_res = norm(full([grad; ceq; min(-ieq,vopt)]));
+    ocp_res = norm(full([grad; ceq; min(-ieq,[dopt.v; dopt.o])]));
 
     % optimal control input
 	u_nmpc = uopt(1:sz.nu);

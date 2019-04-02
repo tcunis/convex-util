@@ -76,10 +76,10 @@ R  = SX.sym('R',nu,nu);         % control stage cost matrix
 Qf = SX.sym('Qf',nx,nx);        % state terminal cost matrix
 xtrg = SX.sym('xtrg',nx,1);     % target reference
 utrg = SX.sym('utrg',nu,1);
-xub = SX.sym('xub',nx,1);       % state upper bound
-xlb = SX.sym('xlb',nx,1);       % state lower bound
-uub = SX.sym('uub',nu,1);       % input upper bound
-ulb = SX.sym('ulb',nu,1);       % input lower bound
+% xub = SX.sym('xub',nx,1);       % state upper bound
+% xlb = SX.sym('xlb',nx,1);       % state lower bound
+% uub = SX.sym('uub',nu,1);       % input upper bound
+% ulb = SX.sym('ulb',nu,1);       % input lower bound
 dub = SX.sym('dub',nd,1);       % input rate upper bound
 dlb = SX.sym('dlb',nd,1);       % input rate lower bound
 yub = SX.sym('yub',ny,1);       % output upper bound
@@ -103,9 +103,20 @@ yk0  =         g(xk,uk,eps);
 
 % weight output function
 if isempty(h)
-    h = @(x,u,~) x;
+    h1 = @(x,u,~) x;
+    h2 = @(x,u,~) [];
+    
+    sz.nw = 0;
 end
-wk0 = h(xk,uk);
+
+nw = sz.nw;
+
+wlb = SX.sym('wlb',nw,1);   % weighted output lower bound
+wub = SX.sym('wub',nw,1);   % weighted output upper bound
+
+wk = SX.sym('wk',nw);
+
+wk0 = h1(xk,uk);
 
 % Casadi functions
 % syntax: name, inputs, outputs, input names, output names
@@ -130,14 +141,15 @@ if ~exist('Vf','var') || isempty(Vf)
     Vf = @(w,Qf,wtrg,utrg,~) 1/2*(w-wtrg)'*Qf*(w-wtrg);
 end
 
-Jk  = Function('Jk', {xk,uk,sk,Q,R,xtrg,utrg}, {j(h(xk),uk,sk,Q,R,h(xtrg),utrg)}, {'xk','uk','sk','Q','R','xtrg','utrg'}, {'Jk'});
-Jf  = Function('Jf', {xk,Qf,xtrg,utrg,eps}, {Vf(h(xk),Qf,h(xtrg),utrg,eps)}, {'xk' 'Qf' 'xtrg' 'utrg' 'eps'}, {'Vf'});
+Jk  = Function('Jk', {xk,uk,sk,Q,R,xtrg,utrg}, {j(h1(xk),uk,sk,Q,R,h1(xtrg),utrg)}, {'xk','uk','sk','Q','R','xtrg','utrg'}, {'Jk'});
+Jf  = Function('Jf', {xk,Qf,xtrg,utrg,eps}, {Vf(h1(xk),Qf,h1(xtrg),utrg,eps)}, {'xk' 'Qf' 'xtrg' 'utrg' 'eps'}, {'Vf'});
 
 % stage constraints
-cuk = Function('cuk',{uk,uub,ulb},{[uk-uub;ulb-uk]},{'uk','uub','ulb'},{'cuk'});
-cxk = Function('cxk',{xk,xub,xlb},{[h(xk)-xub;xlb-h(xk)]},{'xk','xub','xlb'},{'cxk'});
+% cuk = Function('cuk',{uk,uub,ulb},{[uk-uub;ulb-uk]},{'uk','uub','ulb'},{'cuk'});
+% cxk = Function('cxk',{xk,xub,xlb},{[xk-xub;xlb-xk]},{'xk','xub','xlb'},{'cxk'});
 cdk = Function('cdk',{dk,dub,dlb},{[dk-dub;dlb-dk]},{'dk','dub','dlb'},{'cdk'});
 cyk = Function('cyk',{yk,yub,ylb},{[yk-yub;ylb-yk]},{'yk','yub','ylb'},{'cyk'});
+cwk = Function('cwk',{wk,wub,wlb},{[wk-wub;wlb-wk]},{'wk','wub','wlb'},{'cwk'});
 
 % terminal set constraint
 if ~exist('Xf','var') || isempty(Xf)
@@ -154,7 +166,7 @@ s = SX.sym('s',1,N);    % s = [s1,s2,...]
 
 
 % setup NMPC problem structure
-[J,gx,gy,cu,cx,cd,cy,cs] = arrayfun2( ...
+[J,gx,gy,cw,cd,cy,cs] = arrayfun2( ...
                     @(x,xm,u,um,y,ym,s) nlpstruct(x,xm,u,um,y,ym,s), ...
                     x, [x0 x(:,1:end-1)], u, [u0 u(:,1:end-1)], ...
                     y, [y0 y(:,1:end-1)],                       ...
@@ -166,16 +178,18 @@ J  = sum([J{:}]) + Jf(x(:,end),Qf,xtrg,utrg,eps);
 gx = [gx{:}];                       % equality constraints: system dynamics
 gy = [gy{:}];                       % equality constraints: system outputs
 gu = [u(:,end)-utrg];               % equality constraints: system inputs
-cu = [cu{:}];                       % inequality constraints: box inputs
-cx = [cx{:}];                       % inequality constraints: box state
+% cu = [cu{:}];                       % inequality constraints: box inputs
+% cx = [cx{:}];                       % inequality constraints: box state
+cw = [cw{:}];
 cd = [cd{:}];                       % inequality constraints: box input rates
 cy = [cy{:}];                       % inequality constraints: box outputs
 cf = cxf(x(:,end),xtrg,utrg,eps);   % terminal set constraint
-sl = [-s; cs{:}];                   % slack positivity constraint
+sl = [cs{:}];                   % slack positivity constraint
 
 % number of constraints
-sz.ncu = size(cu,1);
-sz.ncx = size(cx,1);
+% sz.ncu = size(cu,1);
+% sz.ncx = size(cx,1);
+sz.ncw = size(cw,1);
 sz.ncd = size(cd,1);
 % sz.ncy = size(cy,1);
 sz.ncf = size(cf,1);
@@ -191,8 +205,9 @@ s = s(:);
 gx = gx(:);
 gy = gy(:);
 gu = gu(:);
-cu = cu(:);
-cx = cx(:);
+% cu = cu(:);
+% cx = cx(:);
+cw = cw(:);
 cd = cd(:);
 cy = cy(:);
 cf = cf(:);
@@ -201,7 +216,7 @@ cs = sl(:);
 % collect similar terms
 z = [u;x;y;s];          % optimization variables
 g = [gx;gy;gu];         % equality constraints
-h = [cu;cx;cd;cy;cf;cs];    % inequality constraints
+h = [cw;cd;cy;cf;cs];   % inequality constraints
 
 sz.nz = length(z);
 sz.ns = length(s);
@@ -244,8 +259,8 @@ nlp.cost_hess = Function('HJ',{ocp,z,Q,R,Qf},{Jzz},{'ocp','z','Q','R','Qf'},{'Jz
 
 % Constraints
 nlp.eq_cstr  = Function('g',{ocp,z},{g,gz},{'ocp','z'},{'g','G'});
-nlp.ieq_cstr = Function('h',{ocp,z,uub,ulb,xub,xlb,dub,dlb,yub,ylb}, ...
-                                    {h,hz},{'ocp','z','uub','ulb','xub','xlb','dub','dlb','yub','ylb'}, ...
+nlp.ieq_cstr = Function('h',{ocp,z,wub,wlb,dub,dlb,yub,ylb}, ...
+                                    {h,hz},{'ocp','z','wub','wlb','dub','dlb','yub','ylb'}, ...
                                                        {'c','C'});
 
 % Sensitivity
@@ -268,7 +283,7 @@ dyn.Cw = h_x;
 dyn.Dw = h_u;
 
 
-function [Ji,gxi,gyi,cui,cxi,cdi,cyi,csi] = nlpstruct(xi,xim,uim,uim2,yi,yim,si)
+function [Ji,gxi,gyi,cwi,cdi,cyi,csi] = nlpstruct(xi,xim,uim,uim2,yi,yim,si)
 %NLPSTRUCT  Returns NLP structure for single stage.
 
     Ji  = Jk(xim,uim,si,Q,R,xtrg,utrg);    
@@ -277,8 +292,9 @@ function [Ji,gxi,gyi,cui,cxi,cdi,cyi,csi] = nlpstruct(xi,xim,uim,uim2,yi,yim,si)
     
     dui = (uim-uim2)/ts;
     
-    cui = cuk(uim,uub,ulb);
-    cxi = cxk(xi, xub,xlb);
+%     cui = cuk(uim,uub,ulb);
+%     cxi = cxk(xi, xub,xlb);
+    cwi = cwk(h2(xi,uim),wub,wlb);
     cyi = cyk(yi, yub,ylb);
     csi = -Ji(2:end);
 
