@@ -46,8 +46,9 @@ ukm1 = zeros(sz.nu,sz.N) + utrg(1:sz.nu);
 xkm1 = zeros(sz.nx,sz.N) + xtrg;
 ykm1 = zeros(sz.ny,sz.N) + y0(1:sz.ny);
 skm1 = zeros(sz.ns,1);
-lkm1 = zeros(sz.nl,1);
-vkm1 = zeros(sz.nv,1);
+lkm1 = []; %nan(sz.nl,1);
+vkm1 = []; %nan(sz.nv,1);
+okm1 = [];
 tkm1 = zeros(1,sz.N);
 
 Xt = zeros(length(x0),nsim);
@@ -60,7 +61,7 @@ Xt(:,1) = x0;
 Ut(:,1) = u0;
 Yt(:,1) = y0;
 
-out(1:nsim-1,1:neps) = struct('ukm1',ukm1,'xkm1',xkm1,'ykm1',ykm1,'tkm1',tkm1,'vkm1',vkm1,'lkm1',lkm1,'skm1',skm1,'info',[],'epsilon',0);
+out(1:nsim-1,1:neps) = struct('ukm1',ukm1,'xkm1',xkm1,'ykm1',ykm1,'tkm1',tkm1,'vkm1',vkm1,'lkm1',lkm1,'okm1',okm1,'skm1',skm1,'info',[],'epsilon',0);
 
 fprintf('Start NMPC:\n0%%');
 
@@ -81,8 +82,8 @@ for i = 1:nsim-1
             
             res(i,j) = 0;
         else
-            [Ut(1:sz.nu,i+1),ukm1,xkm1,ykm1,skm1,lkm1,vkm1,res(i,j),info] = ...
-                    nlp.nmpc_step(Xt(:,i),Ut(1:sz.nu,i),Yt(1:sz.ny,i),xtrg,utrg,eps,ukm1(:),xkm1(:),ykm1(:),skm1,lkm1,vkm1,args,sz,opts);
+            [Ut(1:sz.nu,i+1),ukm1,xkm1,ykm1,skm1,lkm1,vkm1,okm1,res(i,j),info] = ...
+                    nlp.nmpc_step(Xt(:,i),Ut(1:sz.nu,i),Yt(1:sz.ny,i),xtrg,utrg,eps,ukm1(:),xkm1(:),ykm1(:),skm1,lkm1,vkm1,okm1,args,sz,opts);
         end
         
         Xt(:,i+1) = full(dyn.f(Xt(:,i),Ut(:,i+1),eps)); %,T(i+1)-T(i)));
@@ -94,6 +95,7 @@ for i = 1:nsim-1
         out(i,j).skm1 = skm1;
         out(i,j).lkm1 = lkm1;
         out(i,j).vkm1 = vkm1;
+        out(i,j).okm1 = okm1;
         out(i,j).tkm1 = T(i+1)+(0:(sz.N-1))*args.ts;
 
         out(i,j).flag = info.status;

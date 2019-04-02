@@ -1,4 +1,4 @@
-function [u_nmpc,uopt,xopt,yopt,sopt,lkm1,vkm1,ocp_res,info] = nmpc_step(nlp,xhat,uhat,yhat,xtrg,utrg,eps,ukm1,xkm1,ykm1,skm1,lkm1,vkm1,args,sz,opts)
+function [u_nmpc,uopt,xopt,yopt,sopt,lopt,vopt,oopt,ocp_res,info] = nmpc_step(nlp,xhat,uhat,yhat,xtrg,utrg,eps,ukm1,xkm1,ykm1,skm1,lkm1,vkm1,okm1,args,sz,opts)
 % Find optimal NMPC feedback law
 %
 
@@ -63,6 +63,15 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lkm1,vkm1,ocp_res,info] = nmpc_step(nlp,xha
     options.cl = [zeros(nl,1);  -Inf(nv,1)];
     options.cu = [zeros(nl,1); zeros(nv,1)];
 
+    % warm start
+    if ~isempty(lkm1) && ~isempty(vkm1) && ~isempty(okm1)
+        options.ipopt.warm_start_init_point = 'yes';
+        
+        options.lambda = [lkm1; vkm1];
+        options.zl = okm1(1:nz);
+        options.zu = okm1(nz+1:end);
+    end
+    
     problem.jacobianstructure = @() cjsp;
 
     % cost function, gradient, & Hessian
@@ -95,8 +104,6 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lkm1,vkm1,ocp_res,info] = nmpc_step(nlp,xha
     % initial guess
     z0 = [ukm1;xkm1;ykm1;skm1];
     
-    tic
-    
     % solve nonlinear problem
 %     problem.solver = 'fmincon';
     options.ipopt.print_level = 0;
@@ -113,6 +120,8 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lkm1,vkm1,ocp_res,info] = nmpc_step(nlp,xha
 %     setenv('OMP_PLACES', 'cores');
 %     setenv('OMP_NUM_THREADS', '2');
 
+    tic
+    
     try
         [zopt,info] = ipopt(z0,problem,options);
         
@@ -127,21 +136,24 @@ function [u_nmpc,uopt,xopt,yopt,sopt,lkm1,vkm1,ocp_res,info] = nmpc_step(nlp,xha
     % solver time & exit info
     info.time     = toc;
 %     info.exitflag = flag;
-    
+        
     % extract the solution
     uopt = zopt(1:m);
     xopt = zopt(m+1:m+n);
     yopt = zopt(m+n+1:m+n+o);
     sopt = zopt(m+n+o+1:end);
     
+    lopt = info.lambda(1:nl);
+    vopt = info.lambda(nl+1:end);
+    oopt = [info.zl; info.zu];
+
     % residuals
-    dual   = info.lambda;
-    dual_v = info.lambda(nl+1:end);
+    dual = info.lambda;
     grad = problem.laggrad(zopt,1,dual);
     ceq  = full(ceq(zopt));
     ieq  = full(ieq(zopt));
 %     [eq,ieq] = cstr(zopt);
-    ocp_res = norm(full([grad; ceq; min(-ieq,dual_v)]));
+    ocp_res = norm(full([grad; ceq; min(-ieq,vopt)]));
 
     % optimal control input
 	u_nmpc = uopt(1:sz.nu);
