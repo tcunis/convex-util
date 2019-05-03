@@ -158,7 +158,7 @@ function h = compile(nlp,args,sz,gendir)
     
     % compile mex
     for i = 1:length(fn)
-        mex([fn{i} '.cc'], '-DO0', '-O', '-largeArrayDims');
+        mex([fn{i} '.cc'], '-DO0', '-g', '-largeArrayDims');
     end
     
 end
