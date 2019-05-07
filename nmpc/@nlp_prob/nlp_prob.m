@@ -107,6 +107,11 @@ if isempty(h)
     h2 = @(x,u,~) [];
     
     sz.nw = 0;
+elseif length(h) == 1
+    h1 = h;
+    h2 = @(x,u,~) [];
+    
+    sz.nw = 0;
 end
 
 nw = sz.nw;
