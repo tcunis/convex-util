@@ -171,7 +171,9 @@ if ~isempty(bd_func)
             
 elseif ~isempty(bd_type)
     idxs = coco_bd_idxs(bd, bd_type);
-    if strcmp(bd_arg, 'end')
+    if isempty(idxs)
+        % nothing to do
+    elseif strcmp(bd_arg, 'end')
         idxs = idxs(end);
     elseif ~isempty(bd_idxs)
         idxs = idxs(bd_idxs);
