@@ -1,4 +1,4 @@
-function [data, y] = ode_anonym(prob, data, u)
+function [data, y, varargout] = ode_anonym(prob, data, u)
 % Wrapper function for anonymous ODE function call during continuation.
 %
 %% Usage and description
@@ -40,4 +40,10 @@ function [data, y] = ode_anonym(prob, data, u)
     p = u(n+1:n+r);
 
     y = f(x, p);
+    
+    if length(data) > 1
+        df = data{2};
+        
+        varargout = {df(x, p)};
+    end
 end

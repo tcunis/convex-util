@@ -54,15 +54,15 @@ pw_spec = {
      'DIR',     '',   'str',     'dir', '>', 'read', {}
     'PHI0',     '',   'num',    'phi0',   0, 'read', {}
      'EPS',     '',   'num',     'eps',   0, 'read', {}
+     'CNT',     '',   'num',     'cnt',   0, 'read', {}
   };
 [args, opts] = coco_parse(grammar, args_spec, opts_spec, f1{:}, varargin{:});
-[pw] = coco_parse('PHI [DIR] [PHI0 [EPS]]', pw_spec, {}, phi{:});
+[pw] = coco_parse('PHI [DIR] [PHI0 [EPS [CNT]]]', pw_spec, {}, phi{:});
 
 [sol, data] = ep_read_solution('', '', args);
 
 pw.f1 = f1;
 pw.f2 = f2;
-pw.cnt = 0;
 
 data.pw = pw;
 

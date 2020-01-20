@@ -11,7 +11,8 @@ function varargout = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %
 % where 
 %   func ::= 'min' | 'max' | 'zero' | 'nzero' 
-%                  | 'pos' | 'neg'  | 'cross' 
+%                  | 'pos' | 'neg'  | 'cross'
+%                  | 'lab' | 'slab' 
 %                  | 'stab' | FUNCTION_HANDLE
 %   arg  ::= arg_var | {arg_var, arg_idx}
 %   par  ::= NUMERIC
@@ -28,6 +29,7 @@ function varargout = coco_bd_data(bd, var, varargin) %type_idxs, default)
 %  * cross      : threshold; default: 0
 %  * pos/neg    : threshold; default: 0
 %  * min/max    : unused
+%  * lab/slab   : number of LAB; no default
 %  * stab       : stable / unstable flag; default: 1
 %
 % If no |arg| is given for a function, the column data as selected by |var|
@@ -138,6 +140,10 @@ switch (bd_type)
     case 'cross'
         aux     = @(v) eq(min(v.^2),v.^2);
         bd_func = @(x,p) aux(x-p);
+    case {'lab' 'slab'}
+        bd_conv = @(x) ~isempty(intersect(x,bd_idxs));
+        bd_arg  = {upper(bd_type) bd_conv};
+        bd_func = @(x,~) x;
     case 'stab'
         bd_func = @(x,p) xor(x,p);
         if isempty(bd_arg), bd_arg  = 'ep.test.USTAB'; end
@@ -165,7 +171,9 @@ if ~isempty(bd_func)
             
 elseif ~isempty(bd_type)
     idxs = coco_bd_idxs(bd, bd_type);
-    if strcmp(bd_arg, 'end')
+    if isempty(idxs)
+        % nothing to do
+    elseif strcmp(bd_arg, 'end')
         idxs = idxs(end);
     elseif ~isempty(bd_idxs)
         idxs = idxs(bd_idxs);
@@ -191,7 +199,11 @@ else
 end
 
 % convert data
-varargout = {var_conv(data)};
+if iscell(data)
+    varargout = {cellfun(@(c) var_conv(c), data)};
+else
+    varargout = {var_conv(data)};
+end
 
 end
 
