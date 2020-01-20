@@ -1,4 +1,4 @@
-function h = compile(nlp,args,sz,gendir)
+function h = compile(nlp,args,sz,gendir,optflag)
 % Compile nonlinear problem into mex.
 %
 
@@ -156,9 +156,17 @@ function h = compile(nlp,args,sz,gendir)
         problem.(fn{i}).generate([fn{i} '.cc'], opts);
     end
     
+    % set code optimisation
+    if nargin < 5 || optflag
+        flag = {'-DO0'};
+    else
+        flag = {};
+    end
+        
+    
     % compile mex
     for i = 1:length(fn)
-        mex([fn{i} '.cc'], '-DO0', '-g', '-largeArrayDims');
+        mex([fn{i} '.cc'], flag{:}, '-g', '-largeArrayDims');
     end
     
 end
